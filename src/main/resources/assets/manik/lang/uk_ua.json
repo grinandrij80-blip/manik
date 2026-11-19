@@ -1,8 +1,8 @@
 {
   "itemGroup.manik.main": "MANIK — предмети мода",
-  "block.manik.item_spawn": "Точка появи предметів",
-  "block.manik.generator_spawn": "Точка появи генераторів",
-  "block.manik.survivor_spawn": "Точка появи виживших",
-  "block.manik.killer_spawn": "Точка появи маніяка",
+  "item.manik.item_spawn": "Точка появи предметів",
+  "item.manik.generator_spawn": "Точка появи генераторів",
+  "item.manik.survivor_spawn": "Точка появи виживших",
+  "item.manik.killer_spawn": "Точка появи маніяка",
   "item.manik.mark_glove": "Рукавиця мітки"
 }
