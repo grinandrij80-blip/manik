@@ -5,6 +5,12 @@ import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.core.BlockPos;
+import net.minecraft.server.level.ServerLevel;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.Set;
 import net.minecraftforge.event.RegisterCommandsEvent;
 
 /**
@@ -71,10 +77,38 @@ public final class GameCommands {
             return 0;
         }
 
+        ServerLevel level = source.getLevel();
+        List<BlockPos> killerSpawns = SpawnPointManager.get(level, SpawnPointManager.Type.KILLER);
+        List<BlockPos> survivorSpawns = SpawnPointManager.get(level, SpawnPointManager.Type.SURVIVOR);
+        if (killerSpawns.size() < killers) {
+            source.sendFailure(Component.literal("Недостатньо червоних точок спавну: потрібно ще "
+                    + (killers - killerSpawns.size()) + "."));
+            return 0;
+        }
+        if (survivorSpawns.size() < players - killers) {
+            source.sendFailure(Component.literal("Недостатньо зелених точок спавну: потрібно ще "
+                    + (players - killers - survivorSpawns.size()) + "."));
+            return 0;
+        }
+        List<ServerPlayer> shuffledPlayers = new ArrayList<>(source.getServer().getPlayerList().getPlayers());
+        Collections.shuffle(shuffledPlayers);
+        Collections.shuffle(killerSpawns);
+        Collections.shuffle(survivorSpawns);
+        for (int i = 0; i < shuffledPlayers.size(); i++) {
+            ServerPlayer player = shuffledPlayers.get(i);
+            boolean killer = i < killers;
+            BlockPos spawn = killer ? killerSpawns.get(i) : survivorSpawns.get(i - killers);
+            player.removeTag("manik_killer");
+            player.removeTag("manik_survivor");
+            player.addTag(killer ? "manik_killer" : "manik_survivor");
+            player.teleportTo(level, spawn.getX() + 0.5, spawn.getY() + 1.0, spawn.getZ() + 0.5,
+                    Set.of(), player.getYRot(), player.getXRot());
+            player.sendSystemMessage(Component.literal(killer ? "Твоя роль: МАНІЯК" : "Твоя роль: ВИЖИВШИЙ"));
+        }
         GameConfig.setRunning(true);
         source.getServer().getPlayerList().broadcastSystemMessage(
-                Component.literal("MANIK: ігрову сесію розпочато. Гравців: " + players
-                        + ", маніяків: " + killers + ", генераторів: " + GameConfig.generators() + "."),
+                Component.literal("MANIK: гру розпочато! Маніяків: " + killers
+                        + ", виживших: " + (players - killers) + "."),
                 false);
         return 1;
     }
@@ -85,6 +119,10 @@ public final class GameCommands {
             return 0;
         }
         GameConfig.setRunning(false);
+        for (ServerPlayer player : source.getServer().getPlayerList().getPlayers()) {
+            player.removeTag("manik_killer");
+            player.removeTag("manik_survivor");
+        }
         source.getServer().getPlayerList().broadcastSystemMessage(
                 Component.literal("MANIK: ігрову сесію зупинено. Налаштування збережено."),
                 false);
