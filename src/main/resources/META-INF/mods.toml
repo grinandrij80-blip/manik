@@ -1,24 +1,24 @@
 modLoader="javafml"
-loaderVersion="[61,)"
-license="All Rights Reserved"
+loaderVersion="${loader_version_range}"
+license="${mod_license}"
 
 [[mods]]
-modId="manik"
-version="0.1.0"
-displayName="MANIK"
-authors="grinandrij80-blip"
-description='''MANIK mod.'''
+modId="${mod_id}"
+version="${mod_version}"
+displayName="${mod_name}"
+authors="${mod_authors}"
+description='''${mod_description}'''
 
-[[dependencies.manik]]
+[[dependencies.${mod_id}]]
 modId="forge"
 mandatory=true
-versionRange="[61,)"
+versionRange="${forge_version_range}"
 ordering="NONE"
 side="BOTH"
 
-[[dependencies.manik]]
+[[dependencies.${mod_id}]]
 modId="minecraft"
 mandatory=true
-versionRange="[1.21.11,1.21.12)"
+versionRange="${minecraft_version_range}"
 ordering="NONE"
 side="BOTH"
