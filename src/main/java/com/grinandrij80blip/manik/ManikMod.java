@@ -6,6 +6,7 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.network.chat.Component;
 import net.minecraft.core.registries.Registries;
 import net.minecraftforge.fml.common.Mod;
+import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
 import net.minecraftforge.registries.DeferredRegister;
 import net.minecraftforge.registries.RegistryObject;
@@ -32,6 +33,8 @@ public final class ManikMod {
                     .build());
 
     public ManikMod(FMLJavaModLoadingContext context) {
+        MinecraftForge.EVENT_BUS.register(GameCommands.class);
+
         var modBusGroup = context.getModBusGroup();
 
         ManikBlocks.BLOCKS.register(modBusGroup);
