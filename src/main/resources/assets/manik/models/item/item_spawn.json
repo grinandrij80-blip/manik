@@ -1,7 +1,7 @@
 {
   "parent": "minecraft:item/generated",
   "textures": {
-    "layer0": "manik:block/item_spawn"
+    "layer0": "manik:item/item_spawn"
   },
   "display": {
     "firstperson_righthand": {
