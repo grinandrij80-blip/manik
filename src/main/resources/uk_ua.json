@@ -1,0 +1,8 @@
+{
+  "itemGroup.manik.main": "MANIK — предмети мода",
+  "block.manik.item_spawn": "Спавн предметів",
+  "block.manik.generator_spawn": "Спавн генераторів",
+  "block.manik.survivor_spawn": "Спавн виживших",
+  "block.manik.killer_spawn": "Спавн маніяка",
+  "item.manik.mark_glove": "Рукавиця мітки"
+}

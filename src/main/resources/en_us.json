@@ -1,0 +1,8 @@
+{
+  "itemGroup.manik.main": "MANIK — Mod Items",
+  "block.manik.item_spawn": "Item Spawn",
+  "block.manik.generator_spawn": "Generator Spawn",
+  "block.manik.survivor_spawn": "Survivor Spawn",
+  "block.manik.killer_spawn": "Killer Spawn",
+  "item.manik.mark_glove": "Marking Glove"
+}
