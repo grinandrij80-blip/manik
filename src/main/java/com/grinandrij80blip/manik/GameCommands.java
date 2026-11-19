@@ -102,7 +102,7 @@ public final class GameCommands {
             player.removeTag("manik_survivor");
             player.addTag(killer ? "manik_killer" : "manik_survivor");
             player.teleportTo(level, spawn.getX() + 0.5, spawn.getY() + 1.0, spawn.getZ() + 0.5,
-                    Set.of(), player.getYRot(), player.getXRot());
+                    Set.of(), player.getYRot(), player.getXRot(), true);
             player.sendSystemMessage(Component.literal(killer ? "Твоя роль: МАНІЯК" : "Твоя роль: ВИЖИВШИЙ"));
         }
         GameConfig.setRunning(true);
