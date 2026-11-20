@@ -26,6 +26,7 @@ public final class ManikMod {
                         output.accept(ManikBlocks.ITEM_SPAWN_ITEM.get());
                         output.accept(ManikBlocks.GENERATOR_SPAWN_ITEM.get());
                         output.accept(ManikBlocks.GENERATOR_ITEM.get());
+                        output.accept(ManikItems.CANISTER.get());
                         output.accept(ManikBlocks.SURVIVOR_SPAWN_ITEM.get());
                         output.accept(ManikBlocks.KILLER_SPAWN_ITEM.get());
                         output.accept(ManikItems.MARK_GLOVE.get());

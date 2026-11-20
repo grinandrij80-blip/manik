@@ -15,6 +15,12 @@ public final class ManikItems {
                     .setId(ITEMS.key("mark_glove"))
                     .stacksTo(1)));
 
+    // Fuel canister used by the MANIK generator system.
+    public static final RegistryObject<Item> CANISTER = ITEMS.register("canister",
+            () -> new Item(new Item.Properties()
+                    .setId(ITEMS.key("canister"))
+                    .stacksTo(16)));
+
     private ManikItems() {
     }
 }
