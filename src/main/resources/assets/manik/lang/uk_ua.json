@@ -11,5 +11,7 @@
   "block.manik.exit_door": "Спеціальні двері виходу",
   "item.manik.exit_door": "Спеціальні двері виходу",
   "item.manik.medkit": "Аптечка",
-  "item.manik.crowbar": "Лом"
+  "item.manik.crowbar": "Лом",
+  "block.manik.trap": "Капкан",
+  "item.manik.trap": "Капкан"
 }

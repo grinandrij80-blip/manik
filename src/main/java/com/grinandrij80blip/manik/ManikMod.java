@@ -36,6 +36,7 @@ public final class ManikMod {
                         output.accept(ManikBlocks.SURVIVOR_SPAWN_ITEM.get());
                         output.accept(ManikBlocks.KILLER_SPAWN_ITEM.get());
                         output.accept(ManikBlocks.EXIT_DOOR_ITEM.get());
+                        output.accept(ManikBlocks.TRAP_ITEM.get());
                         output.accept(ManikItems.MEDKIT.get());
                         output.accept(ManikItems.CROWBAR.get());
                         output.accept(ManikItems.MARK_GLOVE.get());
@@ -49,9 +50,11 @@ public final class ManikMod {
         }
         RegisterCommandsEvent.BUS.addListener(GameCommands::onRegisterCommands);
         BlockEvent.EntityPlaceEvent.BUS.addListener(SpawnPointManager::onBlockPlace);
+        BlockEvent.EntityPlaceEvent.BUS.addListener(TrapManager::onBlockPlace);
         BlockEvent.BreakEvent.BUS.addListener(SpawnPointManager::onBlockBreak);
         ChunkEvent.Load.BUS.addListener(SpawnPointManager::onChunkLoad);
         PlayerInteractEvent.RightClickBlock.BUS.addListener(GeneratorManager::onRightClickBlock);
+        PlayerInteractEvent.RightClickBlock.BUS.addListener(TrapManager::onRightClickBlock);
         TickEvent.PlayerTickEvent.Post.BUS.addListener(GeneratorManager::onPlayerTick);
         TickEvent.PlayerTickEvent.Post.BUS.addListener(StaminaManager::onPlayerTick);
         PlayerEvent.PlayerLoggedOutEvent.BUS.addListener(GeneratorManager::onPlayerLogout);

@@ -116,6 +116,7 @@ public final class GameCommands {
 
         ACTIVE_GENERATORS.clear();
         ACTIVE_ITEMS.clear();
+        TrapManager.beginRound(level);
         List<BlockPos> generatorSpawns = SpawnPointManager.get(level, SpawnPointManager.Type.GENERATOR);
         Collections.shuffle(generatorSpawns);
         for (int i = 0; i < GameConfig.generators(); i++) {
@@ -138,9 +139,10 @@ public final class GameCommands {
         // Remaining item points receive one random utility item: 50% crowbar, 50% medkit.
         for (int i = canisterCount; i < itemSpawns.size(); i++) {
             BlockPos itemPos = itemSpawns.get(i);
+            int utilityRoll = java.util.concurrent.ThreadLocalRandom.current().nextInt(3);
             net.minecraft.world.item.ItemStack stack = new net.minecraft.world.item.ItemStack(
-                    java.util.concurrent.ThreadLocalRandom.current().nextBoolean()
-                            ? ManikItems.CROWBAR.get() : ManikItems.MEDKIT.get());
+                    utilityRoll == 0 ? ManikBlocks.TRAP_ITEM.get()
+                            : utilityRoll == 1 ? ManikItems.CROWBAR.get() : ManikItems.MEDKIT.get());
             net.minecraft.world.entity.item.ItemEntity utilityItem = new net.minecraft.world.entity.item.ItemEntity(
                     level, itemPos.getX() + 0.5, itemPos.getY() + 0.35, itemPos.getZ() + 0.5, stack);
             if (level.addFreshEntity(utilityItem)) ACTIVE_ITEMS.add(utilityItem.getUUID());
@@ -173,6 +175,7 @@ public final class GameCommands {
         }
         GameConfig.setRunning(false);
         ServerLevel cleanupLevel = activeLevel;
+        TrapManager.clearAll(cleanupLevel);
         if (cleanupLevel != null) {
             for (UUID itemId : ACTIVE_ITEMS) {
                 net.minecraft.world.entity.Entity entity = cleanupLevel.getEntity(itemId);
