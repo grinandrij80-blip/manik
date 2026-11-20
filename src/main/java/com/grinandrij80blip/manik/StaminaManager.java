@@ -2,6 +2,8 @@ package com.grinandrij80blip.manik;
 
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.entity.ai.attributes.AttributeInstance;
+import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.phys.Vec3;
@@ -21,6 +23,16 @@ import java.util.UUID;
  * slowness and a server/client jump lock.
  */
 public final class StaminaManager {
+    private static final double SURVIVOR_WALK_SPEED = 0.1D;
+    // 12% faster than a survivor's normal walk, without enabling sprint.
+    private static final double MANIAC_WALK_SPEED = 0.112D;
+
+    private static void setWalkSpeed(ServerPlayer player, double value) {
+        AttributeInstance speed = player.getAttribute(Attributes.MOVEMENT_SPEED);
+        if (speed != null && Math.abs(speed.getBaseValue() - value) > 0.000001D) {
+            speed.setBaseValue(value);
+        }
+    }
     private static final class StaminaState {
         double stamina = 100.0;
         long exhaustedUntil;
@@ -41,6 +53,7 @@ public final class StaminaManager {
                 && (player.getTags().contains("manik_killer") || player.getTags().contains("manik_survivor"));
 
         if (!participant) {
+            setWalkSpeed(player, SURVIVOR_WALK_SPEED);
             StaminaState removed = STATES.remove(id);
             if (removed != null) ManikNetwork.sendStamina(player, 100, 0, 0, false);
             return;
@@ -51,12 +64,15 @@ public final class StaminaManager {
         boolean killer = player.getTags().contains("manik_killer");
 
         if (killer) {
+            setWalkSpeed(player, MANIAC_WALK_SPEED);
             player.setSprinting(false);
             state.stamina = Math.min(100.0, state.stamina + 0.5);
         } else if (now < state.exhaustedUntil) {
+            setWalkSpeed(player, SURVIVOR_WALK_SPEED);
             player.setSprinting(false);
             state.stamina = Math.min(100.0, state.stamina + 0.5);
         } else if (player.isSprinting()) {
+            setWalkSpeed(player, SURVIVOR_WALK_SPEED);
             state.stamina = Math.max(0.0, state.stamina - 1.0);
             if (state.stamina <= 0.0) {
                 state.exhaustedUntil = now + 100L;
@@ -70,6 +86,7 @@ public final class StaminaManager {
                         true);
             }
         } else {
+            setWalkSpeed(player, SURVIVOR_WALK_SPEED);
             state.stamina = Math.min(100.0, state.stamina + 0.5);
         }
 
@@ -117,12 +134,15 @@ public final class StaminaManager {
     }
 
     public static void beginRound(ServerPlayer player) {
+        setWalkSpeed(player, player.getTags().contains("manik_killer")
+                ? MANIAC_WALK_SPEED : SURVIVOR_WALK_SPEED);
         STATES.put(player.getUUID(), new StaminaState());
         ManikNetwork.sendStamina(player, 100, 0, 0, false);
     }
 
     public static void endRound(List<ServerPlayer> players) {
         for (ServerPlayer player : players) {
+            setWalkSpeed(player, SURVIVOR_WALK_SPEED);
             STATES.remove(player.getUUID());
             ManikNetwork.sendStamina(player, 100, 0, 0, false);
         }
