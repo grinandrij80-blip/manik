@@ -19,6 +19,7 @@ public final class ClientInputHandler {
         Minecraft minecraft = Minecraft.getInstance();
         StaminaHud.tickClient();
         suppressJumpWhileBlocked(minecraft);
+        suppressManiacSprint(minecraft);
     }
 
     private static void onClientTick(TickEvent.ClientTickEvent.Post event) {
@@ -41,6 +42,22 @@ public final class ClientInputHandler {
         if (held != lastSentHeld) {
             ManikNetwork.sendUseInput(held);
             lastSentHeld = held;
+        }
+    }
+
+    /**
+     * Blocks both the sprint key and double-tap sprint for the maniac locally.
+     * The server also enforces the same rule, so this is not just visual.
+     */
+    private static void suppressManiacSprint(Minecraft minecraft) {
+        if (minecraft.player == null || StaminaHud.isSprintAllowed()) return;
+
+        minecraft.options.keySprint.setDown(false);
+        while (minecraft.options.keySprint.consumeClick()) {
+            // Remove buffered sprint presses while this role cannot sprint.
+        }
+        if (minecraft.player.isSprinting()) {
+            minecraft.player.setSprinting(false);
         }
     }
 

@@ -9,6 +9,7 @@ public final class StaminaHud {
     private static int stamina = 100;
     private static int jumpBlockedTicks;
     private static boolean active;
+    private static boolean sprintAllowed = true;
 
     public static void register() {
         AddGuiOverlayLayersEvent.BUS.addListener(event ->
@@ -21,10 +22,16 @@ public final class StaminaHud {
         );
     }
 
-    public static void update(int value, int exhaustion, int jumpBlocked, boolean enabled) {
+    public static void update(int value, int exhaustion, int jumpBlocked,
+                              boolean enabled, boolean canSprint) {
         stamina = Math.max(0, Math.min(100, value));
         jumpBlockedTicks = Math.max(0, jumpBlocked);
         active = enabled;
+        sprintAllowed = canSprint;
+    }
+
+    public static boolean isSprintAllowed() {
+        return sprintAllowed;
     }
 
     public static void tickClient() {

@@ -60,6 +60,7 @@ public final class ManikMod {
         PlayerInteractEvent.RightClickBlock.BUS.addListener(TrapManager::onRightClickBlock);
         TickEvent.PlayerTickEvent.Post.BUS.addListener(TrapManager::onPlayerTick);
         TickEvent.PlayerTickEvent.Post.BUS.addListener(GeneratorManager::onPlayerTick);
+        TickEvent.PlayerTickEvent.Pre.BUS.addListener(StaminaManager::enforceNoSprint);
         TickEvent.PlayerTickEvent.Post.BUS.addListener(StaminaManager::onPlayerTick);
         net.minecraftforge.event.entity.living.LivingEvent.LivingJumpEvent.BUS.addListener(StaminaManager::onLivingJump);
         PlayerEvent.PlayerLoggedOutEvent.BUS.addListener(GeneratorManager::onPlayerLogout);

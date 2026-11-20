@@ -45,6 +45,15 @@ public final class StaminaManager {
 
     private static final Map<UUID, StaminaState> STATES = new HashMap<>();
 
+    /** Apply the role lock before vanilla movement processing on the server. */
+    public static void enforceNoSprint(TickEvent.PlayerTickEvent.Pre event) {
+        if (!(event.player() instanceof ServerPlayer player)) return;
+        if (GameConfig.isRunning() && player.getTags().contains("manik_killer")) {
+            setWalkSpeed(player, MANIAC_WALK_SPEED);
+            player.setSprinting(false);
+        }
+    }
+
     public static void onPlayerTick(TickEvent.PlayerTickEvent.Post event) {
         if (!(event.player() instanceof ServerPlayer player)) return;
 
@@ -55,7 +64,7 @@ public final class StaminaManager {
         if (!participant) {
             setWalkSpeed(player, SURVIVOR_WALK_SPEED);
             StaminaState removed = STATES.remove(id);
-            if (removed != null) ManikNetwork.sendStamina(player, 100, 0, 0, false);
+            if (removed != null) ManikNetwork.sendStamina(player, 100, 0, 0, false, true);
             return;
         }
 
@@ -111,7 +120,7 @@ public final class StaminaManager {
                 || exhaustion != state.lastSentExhaustion
                 || jumpBlocked != state.lastSentJumpBlocked
                 || visible != state.lastSentVisible) {
-            ManikNetwork.sendStamina(player, stamina, exhaustion, jumpBlocked, visible);
+            ManikNetwork.sendStamina(player, stamina, exhaustion, jumpBlocked, visible, !killer);
             state.lastSentStamina = stamina;
             state.lastSentExhaustion = exhaustion;
             state.lastSentJumpBlocked = jumpBlocked;
@@ -137,14 +146,15 @@ public final class StaminaManager {
         setWalkSpeed(player, player.getTags().contains("manik_killer")
                 ? MANIAC_WALK_SPEED : SURVIVOR_WALK_SPEED);
         STATES.put(player.getUUID(), new StaminaState());
-        ManikNetwork.sendStamina(player, 100, 0, 0, false);
+        boolean canSprint = !player.getTags().contains("manik_killer");
+        ManikNetwork.sendStamina(player, 100, 0, 0, false, canSprint);
     }
 
     public static void endRound(List<ServerPlayer> players) {
         for (ServerPlayer player : players) {
             setWalkSpeed(player, SURVIVOR_WALK_SPEED);
             STATES.remove(player.getUUID());
-            ManikNetwork.sendStamina(player, 100, 0, 0, false);
+            ManikNetwork.sendStamina(player, 100, 0, 0, false, true);
         }
     }
 
