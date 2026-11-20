@@ -13,30 +13,21 @@ import java.util.List;
 import java.util.Set;
 import net.minecraftforge.event.RegisterCommandsEvent;
 
-/**
- * Initial command layer for configuring and controlling a MANIK session.
- */
 public final class GameCommands {
     public static void onRegisterCommands(RegisterCommandsEvent event) {
         CommandDispatcher<CommandSourceStack> dispatcher = event.getDispatcher();
-
         dispatcher.register(Commands.literal("game")
-                .then(Commands.literal("start")
-                        .executes(context -> start(context.getSource())))
-                .then(Commands.literal("stop")
-                        .executes(context -> stop(context.getSource())))
-                .then(Commands.literal("status")
-                        .executes(context -> status(context.getSource())))
+                .then(Commands.literal("start").executes(context -> start(context.getSource())))
+                .then(Commands.literal("stop").executes(context -> stop(context.getSource())))
+                .then(Commands.literal("status").executes(context -> status(context.getSource())))
                 .then(Commands.literal("killer")
                         .then(Commands.argument("number", com.mojang.brigadier.arguments.IntegerArgumentType.integer(1, 100))
-                                .executes(context -> setKillers(
-                                        context.getSource(),
+                                .executes(context -> setKillers(context.getSource(),
                                         com.mojang.brigadier.arguments.IntegerArgumentType.getInteger(context, "number")))))
                 .then(Commands.literal("menu")
                         .then(Commands.literal("generators")
                                 .then(Commands.argument("number", com.mojang.brigadier.arguments.IntegerArgumentType.integer(1, 100))
-                                        .executes(context -> setGenerators(
-                                                context.getSource(),
+                                        .executes(context -> setGenerators(context.getSource(),
                                                 com.mojang.brigadier.arguments.IntegerArgumentType.getInteger(context, "number")))))));
     }
 
@@ -65,7 +56,6 @@ public final class GameCommands {
             source.sendFailure(Component.literal("Гра MANIK уже запущена."));
             return 0;
         }
-
         int players = source.getServer().getPlayerList().getPlayers().size();
         int killers = GameConfig.killers();
         if (players < 2) {
@@ -80,9 +70,21 @@ public final class GameCommands {
         ServerLevel level = source.getLevel();
         List<BlockPos> killerSpawns = SpawnPointManager.get(level, SpawnPointManager.Type.KILLER);
         List<BlockPos> survivorSpawns = SpawnPointManager.get(level, SpawnPointManager.Type.SURVIVOR);
+        int requiredCanisterSpawns = GameConfig.generators() * 2 + 3;
+        int availableItemSpawns = SpawnPointManager.get(level, SpawnPointManager.Type.ITEM).size();
+        if (availableItemSpawns < requiredCanisterSpawns) {
+            source.sendFailure(Component.literal("Недостатньо жовтих точок появи предметів для каністр: потрібно "
+                    + requiredCanisterSpawns + ", є " + availableItemSpawns + ". Додай ще "
+                    + (requiredCanisterSpawns - availableItemSpawns) + " точок."));
+            return 0;
+        }
+        if (SpawnPointManager.get(level, SpawnPointManager.Type.GENERATOR).size() < GameConfig.generators()) {
+            int missing = GameConfig.generators() - SpawnPointManager.get(level, SpawnPointManager.Type.GENERATOR).size();
+            source.sendFailure(Component.literal("Недостатньо синіх точок появи генераторів: потрібно ще " + missing + "."));
+            return 0;
+        }
         if (killerSpawns.size() < killers) {
-            source.sendFailure(Component.literal("Недостатньо червоних точок спавну: потрібно ще "
-                    + (killers - killerSpawns.size()) + "."));
+            source.sendFailure(Component.literal("Недостатньо червоних точок спавну: потрібно ще " + (killers - killerSpawns.size()) + "."));
             return 0;
         }
         if (survivorSpawns.size() < players - killers) {
@@ -108,8 +110,7 @@ public final class GameCommands {
         GameConfig.setRunning(true);
         source.getServer().getPlayerList().broadcastSystemMessage(
                 Component.literal("MANIK: гру розпочато! Маніяків: " + killers
-                        + ", виживших: " + (players - killers) + "."),
-                false);
+                        + ", виживших: " + (players - killers) + "."), false);
         return 1;
     }
 
@@ -124,8 +125,7 @@ public final class GameCommands {
             player.removeTag("manik_survivor");
         }
         source.getServer().getPlayerList().broadcastSystemMessage(
-                Component.literal("MANIK: ігрову сесію зупинено. Налаштування збережено."),
-                false);
+                Component.literal("MANIK: ігрову сесію зупинено. Налаштування збережено."), false);
         return 1;
     }
 
@@ -137,6 +137,5 @@ public final class GameCommands {
         return 1;
     }
 
-    private GameCommands() {
-    }
+    private GameCommands() {}
 }
