@@ -26,6 +26,17 @@ public final class StaminaManager {
     private static final double SURVIVOR_WALK_SPEED = 0.1D;
     // 12% faster than a survivor's normal walk, without enabling sprint.
     private static final double MANIAC_WALK_SPEED = 0.112D;
+    // 1.6x scale gives an Enderman-like height while also widening the model
+    // and its entity dimensions; each player's own skin/model proportions remain.
+    private static final double MANIAC_SCALE = 1.6D;
+
+    private static void setScale(ServerPlayer player, double value) {
+        AttributeInstance scale = player.getAttribute(Attributes.SCALE);
+        if (scale != null && Math.abs(scale.getBaseValue() - value) > 0.000001D) {
+            scale.setBaseValue(value);
+            player.refreshDimensions();
+        }
+    }
 
     private static void setWalkSpeed(ServerPlayer player, double value) {
         AttributeInstance speed = player.getAttribute(Attributes.MOVEMENT_SPEED);
@@ -49,6 +60,7 @@ public final class StaminaManager {
     public static void enforceNoSprint(TickEvent.PlayerTickEvent.Pre event) {
         if (!(event.player() instanceof ServerPlayer player)) return;
         if (GameConfig.isRunning() && player.getTags().contains("manik_killer")) {
+            setScale(player, MANIAC_SCALE);
             setWalkSpeed(player, MANIAC_WALK_SPEED);
             player.setSprinting(false);
         }
@@ -62,6 +74,7 @@ public final class StaminaManager {
                 && (player.getTags().contains("manik_killer") || player.getTags().contains("manik_survivor"));
 
         if (!participant) {
+            setScale(player, 1.0D);
             setWalkSpeed(player, SURVIVOR_WALK_SPEED);
             StaminaState removed = STATES.remove(id);
             if (removed != null) ManikNetwork.sendStamina(player, 100, 0, 0, false, true);
@@ -73,14 +86,17 @@ public final class StaminaManager {
         boolean killer = player.getTags().contains("manik_killer");
 
         if (killer) {
+            setScale(player, MANIAC_SCALE);
             setWalkSpeed(player, MANIAC_WALK_SPEED);
             player.setSprinting(false);
             state.stamina = Math.min(100.0, state.stamina + 0.5);
         } else if (now < state.exhaustedUntil) {
+            setScale(player, 1.0D);
             setWalkSpeed(player, SURVIVOR_WALK_SPEED);
             player.setSprinting(false);
             state.stamina = Math.min(100.0, state.stamina + 0.5);
         } else if (player.isSprinting()) {
+            setScale(player, 1.0D);
             setWalkSpeed(player, SURVIVOR_WALK_SPEED);
             state.stamina = Math.max(0.0, state.stamina - 1.0);
             if (state.stamina <= 0.0) {
@@ -95,6 +111,7 @@ public final class StaminaManager {
                         true);
             }
         } else {
+            setScale(player, 1.0D);
             setWalkSpeed(player, SURVIVOR_WALK_SPEED);
             state.stamina = Math.min(100.0, state.stamina + 0.5);
         }
@@ -143,8 +160,9 @@ public final class StaminaManager {
     }
 
     public static void beginRound(ServerPlayer player) {
-        setWalkSpeed(player, player.getTags().contains("manik_killer")
-                ? MANIAC_WALK_SPEED : SURVIVOR_WALK_SPEED);
+        boolean killer = player.getTags().contains("manik_killer");
+        setScale(player, killer ? MANIAC_SCALE : 1.0D);
+        setWalkSpeed(player, killer ? MANIAC_WALK_SPEED : SURVIVOR_WALK_SPEED);
         STATES.put(player.getUUID(), new StaminaState());
         boolean canSprint = !player.getTags().contains("manik_killer");
         ManikNetwork.sendStamina(player, 100, 0, 0, false, canSprint);
@@ -152,6 +170,7 @@ public final class StaminaManager {
 
     public static void endRound(List<ServerPlayer> players) {
         for (ServerPlayer player : players) {
+            setScale(player, 1.0D);
             setWalkSpeed(player, SURVIVOR_WALK_SPEED);
             STATES.remove(player.getUUID());
             ManikNetwork.sendStamina(player, 100, 0, 0, false, true);
@@ -159,7 +178,11 @@ public final class StaminaManager {
     }
 
     public static void onLogout(PlayerEvent.PlayerLoggedOutEvent event) {
-        if (event.getEntity() instanceof ServerPlayer player) STATES.remove(player.getUUID());
+        if (event.getEntity() instanceof ServerPlayer player) {
+            setScale(player, 1.0D);
+            setWalkSpeed(player, SURVIVOR_WALK_SPEED);
+            STATES.remove(player.getUUID());
+        }
     }
 
     private StaminaManager() {}
