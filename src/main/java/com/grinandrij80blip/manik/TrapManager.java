@@ -5,7 +5,6 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.effect.MobEffectInstance;
-import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Blocks;
@@ -13,23 +12,28 @@ import net.minecraftforge.common.util.Result;
 import net.minecraftforge.event.level.BlockEvent;
 import net.minecraftforge.event.entity.player.PlayerInteractEvent;
 
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
+import java.util.UUID;
 
 /**
- * Manages traps, reusable trap-item cooldowns and crowbar disarming.
+ * Manages reusable traps, survivor capture, cooldowns and crowbar disarming.
  * Trap placement: 55 seconds. Crowbar disarm: 7 seconds.
  */
 public final class TrapManager {
     public static final int TRAP_COOLDOWN_TICKS = 55 * 20;
     public static final int CROWBAR_COOLDOWN_TICKS = 7 * 20;
     private static final Set<BlockPos> ACTIVE_TRAPS = new HashSet<>();
+    private static final Map<UUID, BlockPos> TRAPPED_PLAYERS = new HashMap<>();
     private static ServerLevel activeLevel;
 
     public static void beginRound(ServerLevel level) {
         clearAll(activeLevel);
         activeLevel = level;
         ACTIVE_TRAPS.clear();
+        TRAPPED_PLAYERS.clear();
     }
 
     public static boolean onBlockPlace(BlockEvent.EntityPlaceEvent event) {
@@ -51,8 +55,6 @@ public final class TrapManager {
                 return true;
             }
 
-            // Cooldown is attached to the item type. The custom BlockItem restores
-            // the stack count after vanilla places the block.
             player.getCooldowns().addCooldown(trapStack, TRAP_COOLDOWN_TICKS);
             if (activeLevel != level) {
                 clearAll(activeLevel);
@@ -102,8 +104,8 @@ public final class TrapManager {
 
         level.setBlock(pos, Blocks.AIR.defaultBlockState(), 3);
         ACTIVE_TRAPS.remove(pos);
+        releasePlayersAt(pos);
         player.getCooldowns().addCooldown(crowbar, CROWBAR_COOLDOWN_TICKS);
-
 
         int nextDamage = crowbar.getDamageValue() + 1;
         if (nextDamage >= crowbar.getMaxDamage()) {
@@ -112,17 +114,38 @@ public final class TrapManager {
             crowbar.setDamageValue(nextDamage);
         }
 
-        player.displayClientMessage(Component.literal("Капкан знешкоджено й прибрано без випадіння предмета. Перезарядка лома: 7 секунд."), true);
+        player.displayClientMessage(Component.literal("Капкан знешкоджено. Спійманого гравця звільнено. Перезарядка лома: 7 секунд."), true);
     }
 
+    private static void releasePlayersAt(BlockPos trapPos) {
+        TRAPPED_PLAYERS.entrySet().removeIf(entry -> entry.getValue().equals(trapPos));
+    }
 
     /**
-     * Makes the remaining trap cooldown easy to notice while the killer holds
-     * the trap item. The native cooldown overlay is also synchronized by Minecraft.
+     * Keeps captured survivors centered on the active trap until another
+     * player disarms it. Also displays the killer's trap cooldown countdown.
      */
     public static void onPlayerTick(net.minecraftforge.event.TickEvent.PlayerTickEvent.Post event) {
-        if (!(event.player() instanceof ServerPlayer player)
-                || !GameConfig.isRunning()
+        if (!(event.player() instanceof ServerPlayer player)) return;
+
+        UUID playerId = player.getUUID();
+        BlockPos trappedAt = TRAPPED_PLAYERS.get(playerId);
+        if (trappedAt != null) {
+            boolean stillCaptured = player.isAlive()
+                    && GameConfig.isRunning()
+                    && activeLevel != null
+                    && player.level() == activeLevel
+                    && activeLevel.getBlockState(trappedAt).is(ManikBlocks.TRAP.get());
+            if (stillCaptured) {
+                player.setPos(trappedAt.getX() + 0.5, trappedAt.getY() + 1.0, trappedAt.getZ() + 0.5);
+                player.setDeltaMovement(0.0, 0.0, 0.0);
+                player.setSprinting(false);
+            } else {
+                TRAPPED_PLAYERS.remove(playerId);
+            }
+        }
+
+        if (!GameConfig.isRunning()
                 || !player.getTags().contains("manik_killer")
                 || !player.getMainHandItem().is(ManikBlocks.TRAP_ITEM.get())
                 || player.tickCount % 20 != 0) {
@@ -144,15 +167,21 @@ public final class TrapManager {
                 || !GameConfig.isRunning()
                 || activeLevel != serverLevel
                 || !player.getTags().contains("manik_survivor")
-                || !serverLevel.getBlockState(pos).is(ManikBlocks.TRAP.get())) {
+                || !serverLevel.getBlockState(pos).is(ManikBlocks.TRAP.get())
+                || TRAPPED_PLAYERS.containsKey(player.getUUID())) {
             return;
         }
 
-        // A trap briefly slows the survivor; it never deals damage.
-        player.addEffect(new MobEffectInstance(MobEffects.SLOWNESS, 80, 3, false, true, true));
-        serverLevel.setBlock(pos, Blocks.AIR.defaultBlockState(), 3);
-        ACTIVE_TRAPS.remove(pos.immutable());
-        player.displayClientMessage(Component.literal("Ти наступив на капкан! Рух сповільнено на 4 секунди."), true);
+        float damage = player.getMaxHealth() / 3.0F;
+        player.hurt(serverLevel.damageSources().generic(), damage);
+        if (player.isAlive()) {
+            TRAPPED_PLAYERS.put(player.getUUID(), pos.immutable());
+            player.setPos(pos.getX() + 0.5, pos.getY() + 1.0, pos.getZ() + 0.5);
+            player.setDeltaMovement(0.0, 0.0, 0.0);
+            player.displayClientMessage(
+                    Component.literal("Ти потрапив у капкан! Втрачено 1/3 здоров'я. Тебе звільнять, коли капкан знешкодять."),
+                    true);
+        }
     }
 
     public static void clearAll(ServerLevel level) {
@@ -164,6 +193,7 @@ public final class TrapManager {
             }
         }
         ACTIVE_TRAPS.clear();
+        TRAPPED_PLAYERS.clear();
         if (activeLevel == level) activeLevel = null;
     }
 

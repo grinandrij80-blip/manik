@@ -32,22 +32,26 @@ public final class StaminaHud {
         Minecraft minecraft = Minecraft.getInstance();
         if (!active || minecraft.player == null || minecraft.options.hideGui) return;
 
-        int x = 12;
-        int y = minecraft.getWindow().getGuiScaledHeight() - 58;
-        int width = 104;
-        int filled = (int) Math.round((width - 4) * stamina / 100.0);
+        int width = 156;
+        int height = 23;
+        int screenWidth = minecraft.getWindow().getGuiScaledWidth();
+        int x = Math.max(4, (screenWidth - width) / 2);
+        int y = minecraft.getWindow().getGuiScaledHeight() - 69;
+        int filled = (int) Math.round((width - 6) * stamina / 100.0);
 
-        graphics.fill(x, y, x + width, y + 20, 0x99000000);
-        graphics.drawString(minecraft.font, "СТАМІНА " + stamina + "%", x + 3, y + 2, 0xFFFFFFFF, false);
-        graphics.fill(x + 2, y + 12, x + width - 2, y + 17, 0xFF303030);
+        graphics.fill(x, y, x + width, y + height, 0xDD101010);
+        graphics.fill(x, y, x + width, y + 1, 0xFFB8B8B8);
+        graphics.drawString(minecraft.font, "СТАМІНА " + stamina + "%", x + 5, y + 3, 0xFFFFFFFF, false);
+        graphics.fill(x + 3, y + 14, x + width - 3, y + 20, 0xFF303030);
         if (filled > 0) {
             int color = stamina <= 20 ? 0xFFE04B3F : 0xFF4FC46A;
-            graphics.fill(x + 2, y + 12, x + 2 + filled, y + 17, color);
+            graphics.fill(x + 3, y + 14, x + 3 + filled, y + 20, color);
         }
+
         if (exhaustionTicks > 0) {
             int seconds = (exhaustionTicks + 19) / 20;
-            graphics.drawString(minecraft.font, "Відновлення: " + seconds + " с",
-                    x + width + 6, y + 5, 0xFFFFD36A, false);
+            String recovery = "Відновлення: " + seconds + " с";
+            graphics.drawString(minecraft.font, recovery, x + width + 6, y + 7, 0xFFFFD36A, false);
         }
     }
 

@@ -131,7 +131,7 @@ public final class GameCommands {
         for (int i = 0; i < canisterCount; i++) {
             BlockPos itemPos = itemSpawns.get(i);
             net.minecraft.world.entity.item.ItemEntity canister = new net.minecraft.world.entity.item.ItemEntity(
-                    level, itemPos.getX() + 0.5, itemPos.getY() + 0.35, itemPos.getZ() + 0.5,
+                    level, itemPos.getX() + 0.5, itemPos.getY() + 1.02, itemPos.getZ() + 0.5,
                     new net.minecraft.world.item.ItemStack(ManikItems.CANISTER.get()));
             if (level.addFreshEntity(canister)) ACTIVE_ITEMS.add(canister.getUUID());
         }
@@ -144,7 +144,7 @@ public final class GameCommands {
                     utilityRoll == 0 ? ManikBlocks.TRAP_ITEM.get()
                             : utilityRoll == 1 ? ManikItems.CROWBAR.get() : ManikItems.MEDKIT.get());
             net.minecraft.world.entity.item.ItemEntity utilityItem = new net.minecraft.world.entity.item.ItemEntity(
-                    level, itemPos.getX() + 0.5, itemPos.getY() + 0.35, itemPos.getZ() + 0.5, stack);
+                    level, itemPos.getX() + 0.5, itemPos.getY() + 1.02, itemPos.getZ() + 0.5, stack);
             if (level.addFreshEntity(utilityItem)) ACTIVE_ITEMS.add(utilityItem.getUUID());
         }
 

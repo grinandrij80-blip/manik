@@ -2,6 +2,9 @@ package com.grinandrij80blip.manik;
 
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.effect.MobEffectInstance;
+import net.minecraft.world.effect.MobEffects;
+import net.minecraft.world.phys.Vec3;
 import net.minecraftforge.event.TickEvent;
 import net.minecraftforge.event.entity.player.PlayerEvent;
 
@@ -13,12 +16,14 @@ import java.util.UUID;
 /**
  * Server-authoritative MANIK stamina. Sprinting drains 1 point per tick;
  * walking or standing restores 0.5 point per tick. At zero, sprint is
- * disabled for five seconds while recovery continues.
+ * disabled for five seconds. Survivors also receive two seconds of strong
+ * slowness and cannot jump during that short exhaustion penalty.
  */
 public final class StaminaManager {
     private static final class StaminaState {
         double stamina = 100.0;
         long exhaustedUntil;
+        long jumpBlockedUntil;
         int lastSentStamina = -1;
         int lastSentExhaustion = -1;
         boolean sentActive;
@@ -41,9 +46,9 @@ public final class StaminaManager {
 
         StaminaState state = STATES.computeIfAbsent(id, ignored -> new StaminaState());
         long now = player.level().getGameTime();
+        boolean killer = player.getTags().contains("manik_killer");
 
-        // The maniac role is intentionally unable to sprint.
-        if (player.getTags().contains("manik_killer")) {
+        if (killer) {
             player.setSprinting(false);
             state.stamina = Math.min(100.0, state.stamina + 0.5);
         } else if (now < state.exhaustedUntil) {
@@ -53,11 +58,26 @@ public final class StaminaManager {
             state.stamina = Math.max(0.0, state.stamina - 1.0);
             if (state.stamina <= 0.0) {
                 state.exhaustedUntil = now + 100L;
+                state.jumpBlockedUntil = now + 40L;
                 player.setSprinting(false);
-                player.displayClientMessage(Component.literal("Стаміна вичерпана! Відновлення: 5 секунд."), true);
+                if (!killer) {
+                    player.addEffect(new MobEffectInstance(MobEffects.SLOWNESS, 40, 255, false, true, true));
+                }
+                player.displayClientMessage(
+                        Component.literal("Стаміна вичерпана! Замедлення й заборона стрибка: 2 секунди. Спринт недоступний 5 секунд."),
+                        true);
             }
         } else {
             state.stamina = Math.min(100.0, state.stamina + 0.5);
+        }
+
+        // Remove any upward motion during the two-second exhaustion penalty.
+        if (!killer && now < state.jumpBlockedUntil) {
+            player.setSprinting(false);
+            Vec3 movement = player.getDeltaMovement();
+            if (movement.y > 0.0) {
+                player.setDeltaMovement(movement.x, 0.0, movement.z);
+            }
         }
 
         int stamina = (int) Math.round(state.stamina);
