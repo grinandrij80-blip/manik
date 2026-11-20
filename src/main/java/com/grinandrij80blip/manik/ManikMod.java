@@ -58,6 +58,7 @@ public final class ManikMod {
         ChunkEvent.Load.BUS.addListener(SpawnPointManager::onChunkLoad);
         PlayerInteractEvent.RightClickBlock.BUS.addListener(GeneratorManager::onRightClickBlock);
         PlayerInteractEvent.RightClickBlock.BUS.addListener(TrapManager::onRightClickBlock);
+        TickEvent.PlayerTickEvent.Post.BUS.addListener(TrapManager::onPlayerTick);
         TickEvent.PlayerTickEvent.Post.BUS.addListener(GeneratorManager::onPlayerTick);
         TickEvent.PlayerTickEvent.Post.BUS.addListener(StaminaManager::onPlayerTick);
         PlayerEvent.PlayerLoggedOutEvent.BUS.addListener(GeneratorManager::onPlayerLogout);

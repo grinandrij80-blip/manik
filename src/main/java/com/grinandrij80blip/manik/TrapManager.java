@@ -6,7 +6,6 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.effect.MobEffects;
-import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Blocks;
@@ -105,12 +104,6 @@ public final class TrapManager {
         ACTIVE_TRAPS.remove(pos);
         player.getCooldowns().addCooldown(crowbar, CROWBAR_COOLDOWN_TICKS);
 
-        // Spawn a visible item drop in the world (not directly into inventory).
-        ItemEntity droppedTrap = new ItemEntity(
-                level, pos.getX() + 0.5, pos.getY() + 0.25, pos.getZ() + 0.5,
-                new ItemStack(ManikBlocks.TRAP_ITEM.get())
-        );
-        level.addFreshEntity(droppedTrap);
 
         int nextDamage = crowbar.getDamageValue() + 1;
         if (nextDamage >= crowbar.getMaxDamage()) {
@@ -119,7 +112,30 @@ public final class TrapManager {
             crowbar.setDamageValue(nextDamage);
         }
 
-        player.displayClientMessage(Component.literal("Капкан знешкоджено й випав на землю. Перезарядка лома: 7 секунд."), true);
+        player.displayClientMessage(Component.literal("Капкан знешкоджено й прибрано без випадіння предмета. Перезарядка лома: 7 секунд."), true);
+    }
+
+
+    /**
+     * Makes the remaining trap cooldown easy to notice while the killer holds
+     * the trap item. The native cooldown overlay is also synchronized by Minecraft.
+     */
+    public static void onPlayerTick(net.minecraftforge.event.TickEvent.PlayerTickEvent.Post event) {
+        if (!(event.player() instanceof ServerPlayer player)
+                || !GameConfig.isRunning()
+                || !player.getTags().contains("manik_killer")
+                || !player.getMainHandItem().is(ManikBlocks.TRAP_ITEM.get())
+                || player.tickCount % 20 != 0) {
+            return;
+        }
+
+        ItemStack trapStack = new ItemStack(ManikBlocks.TRAP_ITEM.get());
+        float cooldownProgress = player.getCooldowns().getCooldownPercent(trapStack, 0.0F);
+        if (cooldownProgress > 0.0F) {
+            int secondsLeft = (int) Math.ceil(cooldownProgress * TRAP_COOLDOWN_TICKS / 20.0F);
+            player.displayClientMessage(
+                    Component.literal("Перезарядка капкана: " + secondsLeft + " с"), true);
+        }
     }
 
     public static void onTrapStepped(Level level, BlockPos pos, net.minecraft.world.entity.Entity entity) {
