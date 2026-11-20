@@ -34,6 +34,7 @@ public final class ClientInputHandler {
         }
 
         suppressJumpWhileBlocked(minecraft);
+        suppressManiacSprint(minecraft);
 
         boolean held = minecraft.screen == null
                 && minecraft.options.keyShift.isDown()
