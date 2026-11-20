@@ -9,7 +9,7 @@ import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.event.RegisterCommandsEvent;
 import net.minecraftforge.event.level.BlockEvent;
 import net.minecraftforge.event.entity.player.PlayerInteractEvent;
-import net.minecraftforge.event.tick.PlayerTickEvent;
+import net.minecraftforge.event.TickEvent;
 import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
 import net.minecraftforge.registries.DeferredRegister;
 import net.minecraftforge.registries.RegistryObject;
@@ -39,7 +39,7 @@ public final class ManikMod {
         BlockEvent.EntityPlaceEvent.BUS.addListener(SpawnPointManager::onBlockPlace);
         BlockEvent.BreakEvent.BUS.addListener(SpawnPointManager::onBlockBreak);
         PlayerInteractEvent.RightClickBlock.BUS.addListener(GeneratorManager::onRightClickBlock);
-        PlayerTickEvent.Post.BUS.addListener(GeneratorManager::onPlayerTick);
+        TickEvent.PlayerTickEvent.BUS.addListener(GeneratorManager::onPlayerTick);
         var modBusGroup = context.getModBusGroup();
         ManikBlocks.BLOCKS.register(modBusGroup);
         ManikItems.ITEMS.register(modBusGroup);

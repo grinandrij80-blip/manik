@@ -10,8 +10,7 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.HitResult;
 import net.minecraftforge.event.entity.player.PlayerInteractEvent;
-import net.minecraftforge.event.tick.PlayerTickEvent;
-import net.minecraftforge.eventbus.api.Event;
+import net.minecraftforge.event.TickEvent;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -44,19 +43,18 @@ public final class GeneratorManager {
         GeneratorState generator = state(level, event.getPos());
         if (generator.fuel >= 100.0) {
             player.displayClientMessage(Component.literal("Бензин генератора: 100%"), true);
-            event.setUseBlock(Event.Result.DENY);
-            event.setUseItem(Event.Result.DENY);
+            event.setCanceled(true);
             return;
         }
 
         String key = generatorKey(level, event.getPos());
         REFUELING.put(player.getUUID(), new RefuelSession(key));
         player.displayClientMessage(Component.literal("Заправка почалася: +4% бензину за секунду. Відпусти Shift або відведи приціл, щоб зупинити."), true);
-        event.setUseBlock(Event.Result.DENY);
-            event.setUseItem(Event.Result.DENY);
+        event.setCanceled(true);
     }
 
-    public static void onPlayerTick(PlayerTickEvent.Post event) {
+    public static void onPlayerTick(TickEvent.PlayerTickEvent event) {
+        if (event.getPhase() != TickEvent.Phase.END) return;
         Player player = event.getEntity();
         if (!(player instanceof ServerPlayer serverPlayer) || !(player.level() instanceof ServerLevel level)) return;
 
