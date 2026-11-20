@@ -117,6 +117,12 @@ public final class GeneratorManager {
         }
     }
 
+    public static void clearGenerator(ServerLevel level, BlockPos pos) {
+        String key = generatorKey(level, pos);
+        GENERATORS.remove(key);
+        REFUELING.entrySet().removeIf(entry -> entry.getValue().generatorKey.equals(key));
+    }
+
     private static GeneratorState state(ServerLevel level, BlockPos pos) {
         return GENERATORS.computeIfAbsent(generatorKey(level, pos), ignored -> new GeneratorState());
     }

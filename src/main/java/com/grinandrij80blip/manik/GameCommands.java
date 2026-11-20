@@ -11,9 +11,13 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Set;
+import java.util.UUID;
 import net.minecraftforge.event.RegisterCommandsEvent;
 
 public final class GameCommands {
+    private static ServerLevel activeLevel;
+    private static final List<BlockPos> ACTIVE_GENERATORS = new ArrayList<>();
+    private static final List<UUID> ACTIVE_ITEMS = new ArrayList<>();
     public static void onRegisterCommands(RegisterCommandsEvent event) {
         CommandDispatcher<CommandSourceStack> dispatcher = event.getDispatcher();
         dispatcher.register(Commands.literal("game")
@@ -102,7 +106,10 @@ public final class GameCommands {
         for (int i = 0; i < GameConfig.generators(); i++) {
             BlockPos generatorPos = generatorSpawns.get(i);
             level.setBlockAndUpdate(generatorPos, ManikBlocks.GENERATOR.get().defaultBlockState());
+            ACTIVE_GENERATORS.add(generatorPos.immutable());
         }
+        activeLevel = level;
+        ACTIVE_ITEMS.clear();
 
         List<BlockPos> itemSpawns = SpawnPointManager.get(level, SpawnPointManager.Type.ITEM);
         Collections.shuffle(itemSpawns);
@@ -112,7 +119,7 @@ public final class GameCommands {
             net.minecraft.world.entity.item.ItemEntity canister = new net.minecraft.world.entity.item.ItemEntity(
                     level, itemPos.getX() + 0.5, itemPos.getY() + 0.35, itemPos.getZ() + 0.5,
                     new net.minecraft.world.item.ItemStack(ManikItems.CANISTER.get()));
-            level.addFreshEntity(canister);
+            if (level.addFreshEntity(canister)) ACTIVE_ITEMS.add(canister.getUUID());
         }
         for (int i = 0; i < shuffledPlayers.size(); i++) {
             ServerPlayer player = shuffledPlayers.get(i);
@@ -138,12 +145,28 @@ public final class GameCommands {
             return 0;
         }
         GameConfig.setRunning(false);
+        ServerLevel cleanupLevel = activeLevel;
+        if (cleanupLevel != null) {
+            for (UUID itemId : ACTIVE_ITEMS) {
+                net.minecraft.world.entity.Entity entity = cleanupLevel.getEntity(itemId);
+                if (entity != null) entity.discard();
+            }
+            for (BlockPos pos : ACTIVE_GENERATORS) {
+                if (cleanupLevel.getBlockState(pos).is(ManikBlocks.GENERATOR.get())) {
+                    cleanupLevel.setBlockAndUpdate(pos, ManikBlocks.GENERATOR_SPAWN.get().defaultBlockState());
+                }
+                GeneratorManager.clearGenerator(cleanupLevel, pos);
+            }
+        }
+        ACTIVE_ITEMS.clear();
+        ACTIVE_GENERATORS.clear();
+        activeLevel = null;
         for (ServerPlayer player : source.getServer().getPlayerList().getPlayers()) {
             player.removeTag("manik_killer");
             player.removeTag("manik_survivor");
         }
         source.getServer().getPlayerList().broadcastSystemMessage(
-                Component.literal("MANIK: ігрову сесію зупинено. Налаштування збережено."), false);
+                Component.literal("MANIK: гру зупинено. Генератори й ігрові предмети прибрано, точки спавну збережено, ролі скинуто."), false);
         return 1;
     }
 
