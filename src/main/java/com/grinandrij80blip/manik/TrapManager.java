@@ -33,25 +33,23 @@ public final class TrapManager {
         ACTIVE_TRAPS.clear();
     }
 
-    public static void onBlockPlace(BlockEvent.EntityPlaceEvent event) {
+    public static boolean onBlockPlace(BlockEvent.EntityPlaceEvent event) {
         if (!(event.getLevel() instanceof ServerLevel level)
                 || !(event.getEntity() instanceof ServerPlayer player)
                 || !event.getPlacedBlock().is(ManikBlocks.TRAP.get())) {
-            return;
+            return false;
         }
 
         if (GameConfig.isRunning()) {
             if (!player.getTags().contains("manik_killer")) {
-                event.setCanceled(true);
                 player.displayClientMessage(Component.literal("Капкани може встановлювати лише маніяк."), true);
-                return;
+                return true;
             }
 
             ItemStack cooldownStack = new ItemStack(ManikBlocks.TRAP_ITEM.get());
             if (player.getCooldowns().isOnCooldown(cooldownStack)) {
-                event.setCanceled(true);
                 player.displayClientMessage(Component.literal("Капкан перезаряджається."), true);
-                return;
+                return true;
             }
 
             player.getCooldowns().addCooldown(cooldownStack, TRAP_COOLDOWN_TICKS);
@@ -62,6 +60,7 @@ public final class TrapManager {
             ACTIVE_TRAPS.add(event.getPos().immutable());
             player.displayClientMessage(Component.literal("Капкан встановлено. Перезарядка: 55 секунд."), true);
         }
+        return false;
     }
 
     public static void onRightClickBlock(PlayerInteractEvent.RightClickBlock event) {
