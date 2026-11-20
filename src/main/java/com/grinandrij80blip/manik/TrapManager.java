@@ -4,10 +4,10 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
-import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.phys.AABB;
 import net.minecraftforge.common.util.Result;
 import net.minecraftforge.event.level.BlockEvent;
 import net.minecraftforge.event.entity.player.PlayerInteractEvent;
@@ -66,14 +66,8 @@ public final class TrapManager {
         return false;
     }
 
-    /**
-     * Trap blocks cannot be mined by hand or ordinary tools. The crowbar's
-     * right-click action below is the only intended way to disarm one.
-     */
     public static boolean onBlockBreak(BlockEvent.BreakEvent event) {
-        if (!event.getState().is(ManikBlocks.TRAP.get())) {
-            return false;
-        }
+        if (!event.getState().is(ManikBlocks.TRAP.get())) return false;
 
         if (event.getPlayer() instanceof ServerPlayer player) {
             player.displayClientMessage(Component.literal("Капкан не можна зламати киркою чи рукою. Використай лом (ПКМ)."), true);
@@ -122,26 +116,63 @@ public final class TrapManager {
     }
 
     /**
-     * Keeps captured survivors centered on the active trap until another
-     * player disarms it. Also displays the killer's trap cooldown countdown.
+     * Finds any active trap whose block volume touches the survivor's hitbox.
+     * Slightly expanding the trap volume also catches a player standing on its
+     * top surface, where the two unexpanded boxes only touch at the boundary.
+     */
+    private static BlockPos findTouchingTrap(ServerPlayer player) {
+        if (activeLevel == null) return null;
+
+        AABB playerBox = player.getBoundingBox().inflate(0.02, 0.12, 0.02);
+        for (BlockPos pos : ACTIVE_TRAPS) {
+            if (!activeLevel.getBlockState(pos).is(ManikBlocks.TRAP.get())) continue;
+
+            AABB trapBox = new AABB(
+                    pos.getX(), pos.getY(), pos.getZ(),
+                    pos.getX() + 1.0, pos.getY() + 1.0, pos.getZ() + 1.0
+            ).inflate(0.02, 0.12, 0.02);
+
+            if (playerBox.intersects(trapBox)) return pos;
+        }
+        return null;
+    }
+
+    private static void holdAtTrap(ServerPlayer player, BlockPos pos) {
+        double targetX = pos.getX() + 0.5;
+        double targetY = pos.getY() + 1.0;
+        double targetZ = pos.getZ() + 0.5;
+
+        // Use the ServerPlayer teleport operation when the client has moved,
+        // rather than changing only the server-side position with setPos().
+        // This sends a position correction to the player's client as well.
+        if (player.distanceToSqr(targetX, targetY, targetZ) > 1.0E-4
+                || player.getDeltaMovement().lengthSqr() > 1.0E-4) {
+            player.teleportTo(activeLevel, targetX, targetY, targetZ,
+                    Set.of(), player.getYRot(), player.getXRot(), true);
+        }
+
+        player.setDeltaMovement(0.0, 0.0, 0.0);
+        player.setSprinting(false);
+        player.setOnGround(true);
+    }
+
+    /**
+     * Detects contact and repeatedly corrects the captured player's position
+     * on the server until the trap is removed by the disarm interaction.
      */
     public static void onPlayerTick(net.minecraftforge.event.TickEvent.PlayerTickEvent.Post event) {
         if (!(event.player() instanceof ServerPlayer player)) return;
 
         UUID playerId = player.getUUID();
 
-        // Detect the trap directly below the survivor's feet every server tick.
-        // This is reliable even when the trap's low custom collision shape does
-        // not cause Block.stepOn to fire on a particular movement edge.
         if (GameConfig.isRunning()
                 && activeLevel != null
                 && player.level() == activeLevel
                 && player.getTags().contains("manik_survivor")
-                && player.onGround()
                 && !TRAPPED_PLAYERS.containsKey(playerId)) {
-            BlockPos underFeet = BlockPos.containing(player.getX(), player.getY() - 0.05, player.getZ());
-            if (activeLevel.getBlockState(underFeet).is(ManikBlocks.TRAP.get())) {
-                onTrapStepped(activeLevel, underFeet, player);
+            BlockPos touchingTrap = findTouchingTrap(player);
+            if (touchingTrap != null) {
+                onTrapStepped(activeLevel, touchingTrap, player);
             }
         }
 
@@ -153,9 +184,7 @@ public final class TrapManager {
                     && player.level() == activeLevel
                     && activeLevel.getBlockState(trappedAt).is(ManikBlocks.TRAP.get());
             if (stillCaptured) {
-                player.setPos(trappedAt.getX() + 0.5, trappedAt.getY() + 1.0, trappedAt.getZ() + 0.5);
-                player.setDeltaMovement(0.0, 0.0, 0.0);
-                player.setSprinting(false);
+                holdAtTrap(player, trappedAt);
             } else {
                 TRAPPED_PLAYERS.remove(playerId);
             }
@@ -191,11 +220,11 @@ public final class TrapManager {
         float damage = player.getMaxHealth() / 3.0F;
         player.hurt(serverLevel.damageSources().generic(), damage);
         if (player.isAlive()) {
-            TRAPPED_PLAYERS.put(player.getUUID(), pos.immutable());
-            player.setPos(pos.getX() + 0.5, pos.getY() + 1.0, pos.getZ() + 0.5);
-            player.setDeltaMovement(0.0, 0.0, 0.0);
+            BlockPos immutablePos = pos.immutable();
+            TRAPPED_PLAYERS.put(player.getUUID(), immutablePos);
+            holdAtTrap(player, immutablePos);
             player.displayClientMessage(
-                    Component.literal("Ти потрапив у капкан! Втрачено 1/3 здоров'я. Тебе звільнять, коли капкан знешкодять."),
+                    Component.literal("Ти потрапив у капкан! Втрачено 1/3 здоров'я. Не можеш вибратися, доки капкан не знешкодять."),
                     true);
         }
     }

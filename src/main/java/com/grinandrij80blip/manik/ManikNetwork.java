@@ -10,10 +10,10 @@ import net.minecraftforge.network.SimpleChannel;
 
 public final class ManikNetwork {
     private record UseInputPacket(boolean held) {}
-    private record StaminaSyncPacket(int stamina, int exhaustionTicks, boolean active) {}
+    private record StaminaSyncPacket(int stamina, int exhaustionTicks, int jumpBlockedTicks, boolean active) {}
 
     private static final SimpleChannel CHANNEL =
-            ChannelBuilder.named("manik:main").networkProtocolVersion(2).simpleChannel();
+            ChannelBuilder.named("manik:main").networkProtocolVersion(3).simpleChannel();
 
     private static final StreamCodec<RegistryFriendlyByteBuf, UseInputPacket> USE_INPUT_CODEC =
             StreamCodec.of(
@@ -26,9 +26,11 @@ public final class ManikNetwork {
                     (buffer, packet) -> {
                         buffer.writeVarInt(packet.stamina());
                         buffer.writeVarInt(packet.exhaustionTicks());
+                        buffer.writeVarInt(packet.jumpBlockedTicks());
                         buffer.writeBoolean(packet.active());
                     },
-                    buffer -> new StaminaSyncPacket(buffer.readVarInt(), buffer.readVarInt(), buffer.readBoolean())
+                    buffer -> new StaminaSyncPacket(
+                            buffer.readVarInt(), buffer.readVarInt(), buffer.readVarInt(), buffer.readBoolean())
             );
 
     public static void register() {
@@ -40,7 +42,9 @@ public final class ManikNetwork {
 
         CHANNEL.play().flow(PacketFlow.CLIENTBOUND)
                 .addMain(StaminaSyncPacket.class, STAMINA_CODEC,
-                        (packet, context) -> StaminaHud.update(packet.stamina(), packet.exhaustionTicks(), packet.active()))
+                        (packet, context) -> StaminaHud.update(
+                                packet.stamina(), packet.exhaustionTicks(),
+                                packet.jumpBlockedTicks(), packet.active()))
                 .build();
     }
 
@@ -48,8 +52,10 @@ public final class ManikNetwork {
         CHANNEL.send(new UseInputPacket(held), PacketDistributor.SERVER.noArg());
     }
 
-    public static void sendStamina(ServerPlayer player, int stamina, int exhaustionTicks, boolean active) {
-        CHANNEL.send(new StaminaSyncPacket(stamina, exhaustionTicks, active), PacketDistributor.PLAYER.with(player));
+    public static void sendStamina(ServerPlayer player, int stamina, int exhaustionTicks,
+                                   int jumpBlockedTicks, boolean active) {
+        CHANNEL.send(new StaminaSyncPacket(stamina, exhaustionTicks, jumpBlockedTicks, active),
+                PacketDistributor.PLAYER.with(player));
     }
 
     private ManikNetwork() {}

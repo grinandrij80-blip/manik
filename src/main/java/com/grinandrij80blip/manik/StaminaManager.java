@@ -6,6 +6,7 @@ import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.phys.Vec3;
 import net.minecraftforge.event.TickEvent;
+import net.minecraftforge.event.entity.living.LivingEvent;
 import net.minecraftforge.event.entity.player.PlayerEvent;
 
 import java.util.HashMap;
@@ -17,7 +18,7 @@ import java.util.UUID;
  * Server-authoritative MANIK stamina. Sprinting drains 1 point per tick;
  * walking or standing restores 0.5 point per tick. At zero, sprint is
  * disabled for five seconds. Survivors also receive two seconds of strong
- * slowness and cannot jump during that short exhaustion penalty.
+ * slowness and a server/client jump lock.
  */
 public final class StaminaManager {
     private static final class StaminaState {
@@ -26,6 +27,7 @@ public final class StaminaManager {
         long jumpBlockedUntil;
         int lastSentStamina = -1;
         int lastSentExhaustion = -1;
+        int lastSentJumpBlocked = -1;
         boolean sentActive;
     }
 
@@ -40,7 +42,7 @@ public final class StaminaManager {
 
         if (!participant) {
             StaminaState removed = STATES.remove(id);
-            if (removed != null) ManikNetwork.sendStamina(player, 100, 0, false);
+            if (removed != null) ManikNetwork.sendStamina(player, 100, 0, 0, false);
             return;
         }
 
@@ -71,35 +73,52 @@ public final class StaminaManager {
             state.stamina = Math.min(100.0, state.stamina + 0.5);
         }
 
-        // Remove any upward motion during the two-second exhaustion penalty.
         if (!killer && now < state.jumpBlockedUntil) {
             player.setSprinting(false);
             Vec3 movement = player.getDeltaMovement();
-            if (movement.y > 0.0) {
-                player.setDeltaMovement(movement.x, 0.0, movement.z);
+            if (movement.y() > 0.0) {
+                player.setDeltaMovement(movement.x(), 0.0, movement.z());
+                player.setOnGround(true);
             }
         }
 
         int stamina = (int) Math.round(state.stamina);
         int exhaustion = (int) Math.max(0L, state.exhaustedUntil - now);
+        int jumpBlocked = (int) Math.max(0L, state.jumpBlockedUntil - now);
         if (player.tickCount % 5 == 0 || stamina != state.lastSentStamina
-                || exhaustion != state.lastSentExhaustion || !state.sentActive) {
-            ManikNetwork.sendStamina(player, stamina, exhaustion, true);
+                || exhaustion != state.lastSentExhaustion
+                || jumpBlocked != state.lastSentJumpBlocked || !state.sentActive) {
+            ManikNetwork.sendStamina(player, stamina, exhaustion, jumpBlocked, true);
             state.lastSentStamina = stamina;
             state.lastSentExhaustion = exhaustion;
+            state.lastSentJumpBlocked = jumpBlocked;
             state.sentActive = true;
         }
     }
 
+    /**
+     * The vanilla jump event itself is not cancellable, but setting the
+     * vertical velocity back to zero prevents the jump impulse on the server.
+     */
+    public static void onLivingJump(LivingEvent.LivingJumpEvent event) {
+        if (!(event.getEntity() instanceof ServerPlayer player)) return;
+        StaminaState state = STATES.get(player.getUUID());
+        if (state == null || player.level().getGameTime() >= state.jumpBlockedUntil) return;
+
+        Vec3 movement = player.getDeltaMovement();
+        player.setDeltaMovement(movement.x(), 0.0, movement.z());
+        player.setOnGround(true);
+    }
+
     public static void beginRound(ServerPlayer player) {
         STATES.put(player.getUUID(), new StaminaState());
-        ManikNetwork.sendStamina(player, 100, 0, true);
+        ManikNetwork.sendStamina(player, 100, 0, 0, true);
     }
 
     public static void endRound(List<ServerPlayer> players) {
         for (ServerPlayer player : players) {
             STATES.remove(player.getUUID());
-            ManikNetwork.sendStamina(player, 100, 0, false);
+            ManikNetwork.sendStamina(player, 100, 0, 0, false);
         }
     }
 
