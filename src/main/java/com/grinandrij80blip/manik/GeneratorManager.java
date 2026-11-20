@@ -24,7 +24,6 @@ public final class GeneratorManager {
 
     private static final class RefuelSession {
         final String generatorKey;
-        double canisterFuelUsed;
 
         RefuelSession(String generatorKey) {
             this.generatorKey = generatorKey;
@@ -42,18 +41,22 @@ public final class GeneratorManager {
         if (!level.getBlockState(event.getPos()).is(ManikBlocks.GENERATOR.get())) return;
 
         GeneratorState generator = state(level, event.getPos());
+        event.setUseBlock(Result.DENY);
+        event.setUseItem(Result.DENY);
+
         if (generator.fuel >= 100.0) {
             player.displayClientMessage(Component.literal("Бензин генератора: 100%"), true);
-            event.setUseBlock(Result.DENY);
-            event.setUseItem(Result.DENY);
+            return;
+        }
+        if (event.getItemStack().getDamageValue() >= event.getItemStack().getMaxDamage()) {
+            REFUELING.remove(player.getUUID());
+            player.displayClientMessage(Component.literal("Каністра порожня! Візьми повну каністру."), true);
             return;
         }
 
         String key = generatorKey(level, event.getPos());
         REFUELING.put(player.getUUID(), new RefuelSession(key));
-        player.displayClientMessage(Component.literal("Заправка почалася: +4% бензину за секунду. Відпусти Shift або відведи приціл, щоб зупинити."), true);
-        event.setUseBlock(Result.DENY);
-            event.setUseItem(Result.DENY);
+        player.displayClientMessage(Component.literal("Заправка почалася: 4% бензину за секунду. Відпусти Shift або відведи приціл, щоб зупинити."), true);
     }
 
     public static void onPlayerTick(TickEvent.PlayerTickEvent.Post event) {
@@ -88,22 +91,29 @@ public final class GeneratorManager {
             return;
         }
 
-        // 4 percentage points per second = 0.08 percentage points per game tick.
-        double amount = Math.min(0.08, Math.min(50.0 - session.canisterFuelUsed, 100.0 - generator.fuel));
-        generator.fuel += amount;
-        session.canisterFuelUsed += amount;
+        // 4 percentage points per second: transfer 1% every 5 game ticks.
+        // The canister's damage bar stores how much of its 50% capacity has been used.
+        if (player.tickCount % 5 == 0) {
+            int used = held.getDamageValue();
+            int capacity = held.getMaxDamage();
+            if (used >= capacity) {
+                REFUELING.remove(player.getUUID());
+                serverPlayer.displayClientMessage(Component.literal("Каністра порожня!"), true);
+                return;
+            }
 
-        if (session.canisterFuelUsed >= 50.0 - 0.0001) {
-            if (!player.getAbilities().instabuild) held.shrink(1);
-            session.canisterFuelUsed = 0.0;
-            if (held.isEmpty() || generator.fuel >= 100.0) {
+            double amount = Math.min(1.0, 100.0 - generator.fuel);
+            if (amount > 0.0) {
+                generator.fuel += amount;
+                held.setDamageValue(Math.min(capacity, used + 1));
+            }
+
+            if (held.getDamageValue() >= capacity || generator.fuel >= 100.0) {
                 REFUELING.remove(player.getUUID());
             }
-        }
-
-        if (player.tickCount % 5 == 0) {
             serverPlayer.displayClientMessage(
-                    Component.literal("Заправка генератора: " + percent(generator.fuel) + "%"), true);
+                    Component.literal("Бензин генератора: " + percent(generator.fuel)
+                            + "% | Каністра: " + (int) Math.round(100.0 * (capacity - held.getDamageValue()) / capacity) + "%"), true);
         }
     }
 

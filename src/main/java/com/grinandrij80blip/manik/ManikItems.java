@@ -17,9 +17,9 @@ public final class ManikItems {
 
     // Fuel canister used by the MANIK generator system.
     public static final RegistryObject<Item> CANISTER = ITEMS.register("canister",
-            () -> new Item(new Item.Properties()
+            () -> new CanisterItem(new Item.Properties()
                     .setId(ITEMS.key("canister"))
-                    .stacksTo(16)));
+                    .durability(CanisterItem.CAPACITY)));
 
     private ManikItems() {
     }
