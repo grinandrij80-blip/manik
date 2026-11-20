@@ -9,8 +9,9 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.HitResult;
-import net.minecraftforge.event.TickEvent;
 import net.minecraftforge.event.entity.player.PlayerInteractEvent;
+import net.minecraftforge.event.tick.PlayerTickEvent;
+import net.minecraftforge.eventbus.api.Event;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -43,19 +44,20 @@ public final class GeneratorManager {
         GeneratorState generator = state(level, event.getPos());
         if (generator.fuel >= 100.0) {
             player.displayClientMessage(Component.literal("Бензин генератора: 100%"), true);
-            event.setCanceled(true);
+            event.setUseBlock(Event.Result.DENY);
+            event.setUseItem(Event.Result.DENY);
             return;
         }
 
         String key = generatorKey(level, event.getPos());
         REFUELING.put(player.getUUID(), new RefuelSession(key));
         player.displayClientMessage(Component.literal("Заправка почалася: +4% бензину за секунду. Відпусти Shift або відведи приціл, щоб зупинити."), true);
-        event.setCanceled(true);
+        event.setUseBlock(Event.Result.DENY);
+            event.setUseItem(Event.Result.DENY);
     }
 
-    public static void onPlayerTick(TickEvent.PlayerTickEvent event) {
-        if (event.phase != TickEvent.Phase.END) return;
-        Player player = event.player;
+    public static void onPlayerTick(PlayerTickEvent.Post event) {
+        Player player = event.getEntity();
         if (!(player instanceof ServerPlayer serverPlayer) || !(player.level() instanceof ServerLevel level)) return;
 
         HitResult hit = player.pick(5.0, 0.0F, false);
@@ -110,7 +112,7 @@ public final class GeneratorManager {
     }
 
     private static String generatorKey(ServerLevel level, BlockPos pos) {
-        return level.dimension().location() + "|" + pos.asLong();
+        return level.dimension().toString() + "|" + pos.asLong();
     }
 
     private static int percent(double value) {
