@@ -8,16 +8,12 @@ import net.minecraftforge.network.ChannelBuilder;
 import net.minecraftforge.network.PacketDistributor;
 import net.minecraftforge.network.SimpleChannel;
 
-/**
- * Carries the real client-side held state of Shift + right mouse button to
- * the logical server. Only state changes are sent, not one packet per tick.
- */
 public final class ManikNetwork {
-    private record UseInputPacket(boolean held) {
-    }
+    private record UseInputPacket(boolean held) {}
+    private record StaminaSyncPacket(int stamina, int exhaustionTicks, boolean active) {}
 
     private static final SimpleChannel CHANNEL =
-            ChannelBuilder.named("manik:main").networkProtocolVersion(1).simpleChannel();
+            ChannelBuilder.named("manik:main").networkProtocolVersion(2).simpleChannel();
 
     private static final StreamCodec<RegistryFriendlyByteBuf, UseInputPacket> USE_INPUT_CODEC =
             StreamCodec.of(
@@ -25,15 +21,26 @@ public final class ManikNetwork {
                     buffer -> new UseInputPacket(buffer.readBoolean())
             );
 
+    private static final StreamCodec<RegistryFriendlyByteBuf, StaminaSyncPacket> STAMINA_CODEC =
+            StreamCodec.of(
+                    (buffer, packet) -> {
+                        buffer.writeVarInt(packet.stamina());
+                        buffer.writeVarInt(packet.exhaustionTicks());
+                        buffer.writeBoolean(packet.active());
+                    },
+                    buffer -> new StaminaSyncPacket(buffer.readVarInt(), buffer.readVarInt(), buffer.readBoolean())
+            );
+
     public static void register() {
-        CHANNEL.play()
-                .flow(PacketFlow.SERVERBOUND)
+        CHANNEL.play().flow(PacketFlow.SERVERBOUND)
                 .addMain(UseInputPacket.class, USE_INPUT_CODEC, (packet, context) -> {
                     ServerPlayer sender = context.getSender();
-                    if (sender != null) {
-                        GeneratorManager.setUseInputHeld(sender, packet.held());
-                    }
-                })
+                    if (sender != null) GeneratorManager.setUseInputHeld(sender, packet.held());
+                });
+
+        CHANNEL.play().flow(PacketFlow.CLIENTBOUND)
+                .addMain(StaminaSyncPacket.class, STAMINA_CODEC,
+                        (packet, context) -> StaminaHud.update(packet.stamina(), packet.exhaustionTicks(), packet.active()))
                 .build();
     }
 
@@ -41,6 +48,9 @@ public final class ManikNetwork {
         CHANNEL.send(new UseInputPacket(held), PacketDistributor.SERVER.noArg());
     }
 
-    private ManikNetwork() {
+    public static void sendStamina(ServerPlayer player, int stamina, int exhaustionTicks, boolean active) {
+        CHANNEL.send(new StaminaSyncPacket(stamina, exhaustionTicks, active), PacketDistributor.PLAYER.with(player));
     }
+
+    private ManikNetwork() {}
 }

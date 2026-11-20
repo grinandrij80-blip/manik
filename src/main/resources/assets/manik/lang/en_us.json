@@ -9,5 +9,7 @@
   "item.manik.mark_glove": "Marking Glove",
   "item.manik.generator": "Portable Generator",
   "block.manik.exit_door": "Special Exit Door",
-  "item.manik.exit_door": "Special Exit Door"
+  "item.manik.exit_door": "Special Exit Door",
+  "item.manik.medkit": "Medkit",
+  "item.manik.crowbar": "Crowbar"
 }

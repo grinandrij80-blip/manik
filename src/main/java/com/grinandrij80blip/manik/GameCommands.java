@@ -20,17 +20,14 @@ public final class GameCommands {
     private static final List<UUID> ACTIVE_ITEMS = new ArrayList<>();
 
     public static boolean areAllGeneratorsReady(ServerLevel level) {
-        if (!GameConfig.isRunning() || activeLevel != level || ACTIVE_GENERATORS.isEmpty()) {
-            return false;
-        }
+        if (!GameConfig.isRunning() || activeLevel != level || ACTIVE_GENERATORS.isEmpty()) return false;
         for (BlockPos pos : ACTIVE_GENERATORS) {
             if (!level.getBlockState(pos).is(ManikBlocks.GENERATOR.get())
-                    || !GeneratorManager.isGeneratorReady(level, pos)) {
-                return false;
-            }
+                    || !GeneratorManager.isGeneratorReady(level, pos)) return false;
         }
         return true;
     }
+
     public static void onRegisterCommands(RegisterCommandsEvent event) {
         CommandDispatcher<CommandSourceStack> dispatcher = event.getDispatcher();
         dispatcher.register(Commands.literal("game")
@@ -87,21 +84,23 @@ public final class GameCommands {
         ServerLevel level = source.getLevel();
         List<BlockPos> killerSpawns = SpawnPointManager.get(level, SpawnPointManager.Type.KILLER);
         List<BlockPos> survivorSpawns = SpawnPointManager.get(level, SpawnPointManager.Type.SURVIVOR);
-        int requiredCanisterSpawns = GameConfig.generators() * 2 + 3;
+        int canisterCount = GameConfig.generators() * 2 + 3;
         int availableItemSpawns = SpawnPointManager.get(level, SpawnPointManager.Type.ITEM).size();
-        if (availableItemSpawns < requiredCanisterSpawns) {
+        if (availableItemSpawns < canisterCount) {
             source.sendFailure(Component.literal("Недостатньо жовтих точок появи предметів для каністр: потрібно "
-                    + requiredCanisterSpawns + ", є " + availableItemSpawns + ". Додай ще "
-                    + (requiredCanisterSpawns - availableItemSpawns) + " точок."));
+                    + canisterCount + ", є " + availableItemSpawns + ". Додай ще "
+                    + (canisterCount - availableItemSpawns) + " точок."));
             return 0;
         }
-        if (SpawnPointManager.get(level, SpawnPointManager.Type.GENERATOR).size() < GameConfig.generators()) {
-            int missing = GameConfig.generators() - SpawnPointManager.get(level, SpawnPointManager.Type.GENERATOR).size();
-            source.sendFailure(Component.literal("Недостатньо синіх точок появи генераторів: потрібно ще " + missing + "."));
+        int availableGenerators = SpawnPointManager.get(level, SpawnPointManager.Type.GENERATOR).size();
+        if (availableGenerators < GameConfig.generators()) {
+            source.sendFailure(Component.literal("Недостатньо синіх точок появи генераторів: потрібно ще "
+                    + (GameConfig.generators() - availableGenerators) + "."));
             return 0;
         }
         if (killerSpawns.size() < killers) {
-            source.sendFailure(Component.literal("Недостатньо червоних точок спавну: потрібно ще " + (killers - killerSpawns.size()) + "."));
+            source.sendFailure(Component.literal("Недостатньо червоних точок спавну: потрібно ще "
+                    + (killers - killerSpawns.size()) + "."));
             return 0;
         }
         if (survivorSpawns.size() < players - killers) {
@@ -109,6 +108,7 @@ public final class GameCommands {
                     + (players - killers - survivorSpawns.size()) + "."));
             return 0;
         }
+
         List<ServerPlayer> shuffledPlayers = new ArrayList<>(source.getServer().getPlayerList().getPlayers());
         Collections.shuffle(shuffledPlayers);
         Collections.shuffle(killerSpawns);
@@ -124,11 +124,9 @@ public final class GameCommands {
             ACTIVE_GENERATORS.add(generatorPos.immutable());
         }
         activeLevel = level;
-        ACTIVE_ITEMS.clear();
 
         List<BlockPos> itemSpawns = SpawnPointManager.get(level, SpawnPointManager.Type.ITEM);
         Collections.shuffle(itemSpawns);
-        int canisterCount = GameConfig.generators() * 2 + 3;
         for (int i = 0; i < canisterCount; i++) {
             BlockPos itemPos = itemSpawns.get(i);
             net.minecraft.world.entity.item.ItemEntity canister = new net.minecraft.world.entity.item.ItemEntity(
@@ -136,6 +134,18 @@ public final class GameCommands {
                     new net.minecraft.world.item.ItemStack(ManikItems.CANISTER.get()));
             if (level.addFreshEntity(canister)) ACTIVE_ITEMS.add(canister.getUUID());
         }
+
+        // Remaining item points receive one random utility item: 50% crowbar, 50% medkit.
+        for (int i = canisterCount; i < itemSpawns.size(); i++) {
+            BlockPos itemPos = itemSpawns.get(i);
+            net.minecraft.world.item.ItemStack stack = new net.minecraft.world.item.ItemStack(
+                    java.util.concurrent.ThreadLocalRandom.current().nextBoolean()
+                            ? ManikItems.CROWBAR.get() : ManikItems.MEDKIT.get());
+            net.minecraft.world.entity.item.ItemEntity utilityItem = new net.minecraft.world.entity.item.ItemEntity(
+                    level, itemPos.getX() + 0.5, itemPos.getY() + 0.35, itemPos.getZ() + 0.5, stack);
+            if (level.addFreshEntity(utilityItem)) ACTIVE_ITEMS.add(utilityItem.getUUID());
+        }
+
         for (int i = 0; i < shuffledPlayers.size(); i++) {
             ServerPlayer player = shuffledPlayers.get(i);
             boolean killer = i < killers;
@@ -146,7 +156,9 @@ public final class GameCommands {
             player.teleportTo(level, spawn.getX() + 0.5, spawn.getY() + 1.0, spawn.getZ() + 0.5,
                     Set.of(), player.getYRot(), player.getXRot(), true);
             player.sendSystemMessage(Component.literal(killer ? "Твоя роль: МАНІЯК" : "Твоя роль: ВИЖИВШИЙ"));
+            StaminaManager.beginRound(player);
         }
+
         GameConfig.setRunning(true);
         source.getServer().getPlayerList().broadcastSystemMessage(
                 Component.literal("MANIK: гру розпочато! Маніяків: " + killers
@@ -177,12 +189,14 @@ public final class GameCommands {
         ACTIVE_GENERATORS.clear();
         activeLevel = null;
         GeneratorManager.clearAllSessions();
+        StaminaManager.endRound(source.getServer().getPlayerList().getPlayers());
         for (ServerPlayer player : source.getServer().getPlayerList().getPlayers()) {
             player.removeTag("manik_killer");
             player.removeTag("manik_survivor");
         }
         source.getServer().getPlayerList().broadcastSystemMessage(
-                Component.literal("MANIK: гру зупинено. Генератори й ігрові предмети прибрано, точки спавну збережено, ролі скинуто."), false);
+                Component.literal("MANIK: гру зупинено. Генератори й ігрові предмети прибрано, точки спавну збережено, ролі скинуто."),
+                false);
         return 1;
     }
 

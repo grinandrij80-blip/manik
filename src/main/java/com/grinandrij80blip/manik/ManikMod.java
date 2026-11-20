@@ -36,19 +36,26 @@ public final class ManikMod {
                         output.accept(ManikBlocks.SURVIVOR_SPAWN_ITEM.get());
                         output.accept(ManikBlocks.KILLER_SPAWN_ITEM.get());
                         output.accept(ManikBlocks.EXIT_DOOR_ITEM.get());
+                        output.accept(ManikItems.MEDKIT.get());
+                        output.accept(ManikItems.CROWBAR.get());
                         output.accept(ManikItems.MARK_GLOVE.get());
                     }).build());
 
     public ManikMod(FMLJavaModLoadingContext context) {
         ManikNetwork.register();
-        if (FMLEnvironment.dist == Dist.CLIENT) ClientInputHandler.register();
+        if (FMLEnvironment.dist == Dist.CLIENT) {
+            ClientInputHandler.register();
+            StaminaHud.register();
+        }
         RegisterCommandsEvent.BUS.addListener(GameCommands::onRegisterCommands);
         BlockEvent.EntityPlaceEvent.BUS.addListener(SpawnPointManager::onBlockPlace);
         BlockEvent.BreakEvent.BUS.addListener(SpawnPointManager::onBlockBreak);
         ChunkEvent.Load.BUS.addListener(SpawnPointManager::onChunkLoad);
         PlayerInteractEvent.RightClickBlock.BUS.addListener(GeneratorManager::onRightClickBlock);
         TickEvent.PlayerTickEvent.Post.BUS.addListener(GeneratorManager::onPlayerTick);
+        TickEvent.PlayerTickEvent.Post.BUS.addListener(StaminaManager::onPlayerTick);
         PlayerEvent.PlayerLoggedOutEvent.BUS.addListener(GeneratorManager::onPlayerLogout);
+        PlayerEvent.PlayerLoggedOutEvent.BUS.addListener(StaminaManager::onLogout);
         var modBusGroup = context.getModBusGroup();
         ManikBlocks.BLOCKS.register(modBusGroup);
         ManikItems.ITEMS.register(modBusGroup);
