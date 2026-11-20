@@ -28,7 +28,7 @@ public final class StaminaManager {
         int lastSentStamina = -1;
         int lastSentExhaustion = -1;
         int lastSentJumpBlocked = -1;
-        boolean sentActive;
+        boolean lastSentVisible;
     }
 
     private static final Map<UUID, StaminaState> STATES = new HashMap<>();
@@ -85,14 +85,20 @@ public final class StaminaManager {
         int stamina = (int) Math.round(state.stamina);
         int exhaustion = (int) Math.max(0L, state.exhaustedUntil - now);
         int jumpBlocked = (int) Math.max(0L, state.jumpBlockedUntil - now);
+
+        // Show the bar while sprint is being used and while stamina is
+        // recovering. Hide it again once the survivor is back at full stamina.
+        boolean visible = !killer && (player.isSprinting() || state.stamina < 100.0);
+
         if (player.tickCount % 5 == 0 || stamina != state.lastSentStamina
                 || exhaustion != state.lastSentExhaustion
-                || jumpBlocked != state.lastSentJumpBlocked || !state.sentActive) {
-            ManikNetwork.sendStamina(player, stamina, exhaustion, jumpBlocked, true);
+                || jumpBlocked != state.lastSentJumpBlocked
+                || visible != state.lastSentVisible) {
+            ManikNetwork.sendStamina(player, stamina, exhaustion, jumpBlocked, visible);
             state.lastSentStamina = stamina;
             state.lastSentExhaustion = exhaustion;
             state.lastSentJumpBlocked = jumpBlocked;
-            state.sentActive = true;
+            state.lastSentVisible = visible;
         }
     }
 
@@ -112,7 +118,7 @@ public final class StaminaManager {
 
     public static void beginRound(ServerPlayer player) {
         STATES.put(player.getUUID(), new StaminaState());
-        ManikNetwork.sendStamina(player, 100, 0, 0, true);
+        ManikNetwork.sendStamina(player, 100, 0, 0, false);
     }
 
     public static void endRound(List<ServerPlayer> players) {

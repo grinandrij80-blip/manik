@@ -46,6 +46,7 @@ public final class GameCommands {
     }
 
     private static int setKillers(CommandSourceStack source, int number) {
+        GameConfig.load(source.getLevel());
         if (GameConfig.isRunning()) {
             source.sendFailure(Component.literal("Зупини гру через /game stop перед зміною налаштувань."));
             return 0;
@@ -56,6 +57,7 @@ public final class GameCommands {
     }
 
     private static int setGenerators(CommandSourceStack source, int number) {
+        GameConfig.load(source.getLevel());
         if (GameConfig.isRunning()) {
             source.sendFailure(Component.literal("Зупини гру через /game stop перед зміною налаштувань."));
             return 0;
@@ -66,6 +68,7 @@ public final class GameCommands {
     }
 
     private static int start(CommandSourceStack source) {
+        GameConfig.load(source.getLevel());
         if (GameConfig.isRunning()) {
             source.sendFailure(Component.literal("Гра MANIK уже запущена."));
             return 0;
@@ -227,6 +230,7 @@ public final class GameCommands {
     }
 
     private static int status(CommandSourceStack source) {
+        GameConfig.load(source.getLevel());
         String state = GameConfig.isRunning() ? "запущена" : "зупинена";
         source.sendSuccess(() -> Component.literal("MANIK: " + state
                 + " | маніяків: " + GameConfig.killers()
