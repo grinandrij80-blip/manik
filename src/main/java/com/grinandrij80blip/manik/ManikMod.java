@@ -67,6 +67,7 @@ public final class ManikMod {
         net.minecraftforge.event.entity.living.LivingEvent.LivingJumpEvent.BUS.addListener(StaminaManager::onLivingJump);
         PlayerEvent.PlayerLoggedOutEvent.BUS.addListener(GeneratorManager::onPlayerLogout);
         PlayerEvent.PlayerLoggedOutEvent.BUS.addListener(StaminaManager::onLogout);
+        PlayerEvent.PlayerLoggedOutEvent.BUS.addListener(GloveManager::onLogout);
         var modBusGroup = context.getModBusGroup();
         ManikBlocks.BLOCKS.register(modBusGroup);
         ManikItems.ITEMS.register(modBusGroup);
