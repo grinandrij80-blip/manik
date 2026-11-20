@@ -39,7 +39,7 @@ public final class ManikMod {
         BlockEvent.EntityPlaceEvent.BUS.addListener(SpawnPointManager::onBlockPlace);
         BlockEvent.BreakEvent.BUS.addListener(SpawnPointManager::onBlockBreak);
         PlayerInteractEvent.RightClickBlock.BUS.addListener(GeneratorManager::onRightClickBlock);
-        TickEvent.PlayerTickEvent.BUS.addListener(GeneratorManager::onPlayerTick);
+        TickEvent.PlayerTickEvent.Post.BUS.addListener(GeneratorManager::onPlayerTick);
         var modBusGroup = context.getModBusGroup();
         ManikBlocks.BLOCKS.register(modBusGroup);
         ManikItems.ITEMS.register(modBusGroup);
