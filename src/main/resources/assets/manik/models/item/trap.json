@@ -1,4 +1,3 @@
 {
-  "parent": "minecraft:item/generated",
-  "textures": {"layer0": "manik:item/trap"}
+  "parent": "manik:block/trap"
 }

@@ -32,9 +32,9 @@ public final class ManikBlocks {
     public static final RegistryObject<Block> EXIT_DOOR = BLOCKS.register("exit_door",
             () -> new ManikExitDoorBlock(BlockBehaviour.Properties.of().setId(BLOCKS.key("exit_door"))
                     .mapColor(MapColor.COLOR_GRAY).strength(4.0F).noOcclusion()));
-    public static final RegistryObject<Block> TRAP = BLOCKS.register("trap",
+    public static final RegistryObject<ManikTrapBlock> TRAP = BLOCKS.register("trap",
             () -> new ManikTrapBlock(BlockBehaviour.Properties.of().setId(BLOCKS.key("trap"))
-                    .mapColor(MapColor.COLOR_GRAY).strength(0.8F).noOcclusion()));
+                    .mapColor(MapColor.COLOR_GRAY).strength(-1.0F).noOcclusion()));
 
     public static final RegistryObject<Item> ITEM_SPAWN_ITEM = ITEMS.register("item_spawn",
             () -> new BlockItem(ITEM_SPAWN.get(), new Item.Properties().setId(ITEMS.key("item_spawn"))));
@@ -49,7 +49,8 @@ public final class ManikBlocks {
     public static final RegistryObject<Item> EXIT_DOOR_ITEM = ITEMS.register("exit_door",
             () -> new BlockItem(EXIT_DOOR.get(), new Item.Properties().setId(ITEMS.key("exit_door"))));
     public static final RegistryObject<Item> TRAP_ITEM = ITEMS.register("trap",
-            () -> new BlockItem(TRAP.get(), new Item.Properties().setId(ITEMS.key("trap")).stacksTo(16)));
+            () -> new ManikTrapItem(TRAP.get(), new Item.Properties()
+                    .setId(ITEMS.key("trap")).stacksTo(16)));
 
     private ManikBlocks() {}
 }

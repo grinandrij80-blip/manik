@@ -52,6 +52,8 @@ public final class ManikMod {
         BlockEvent.EntityPlaceEvent.BUS.addListener(SpawnPointManager::onBlockPlace);
         BlockEvent.EntityPlaceEvent.BUS.addListener(
                 (java.util.function.Predicate<BlockEvent.EntityPlaceEvent>) TrapManager::onBlockPlace);
+        BlockEvent.BreakEvent.BUS.addListener(
+                (java.util.function.Predicate<BlockEvent.BreakEvent>) TrapManager::onBlockBreak);
         BlockEvent.BreakEvent.BUS.addListener(SpawnPointManager::onBlockBreak);
         ChunkEvent.Load.BUS.addListener(SpawnPointManager::onChunkLoad);
         PlayerInteractEvent.RightClickBlock.BUS.addListener(GeneratorManager::onRightClickBlock);
