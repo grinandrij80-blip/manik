@@ -119,6 +119,7 @@ public final class GameCommands {
 
         ACTIVE_GENERATORS.clear();
         ACTIVE_ITEMS.clear();
+        GloveManager.resetRound();
         TrapManager.beginRound(level);
         List<BlockPos> generatorSpawns = SpawnPointManager.get(level, SpawnPointManager.Type.GENERATOR);
         Collections.shuffle(generatorSpawns);
@@ -217,6 +218,7 @@ public final class GameCommands {
             return 0;
         }
         GameConfig.setRunning(false);
+        GloveManager.resetRound();
         ServerLevel cleanupLevel = activeLevel;
         TrapManager.clearAll(cleanupLevel);
         if (cleanupLevel != null) {
