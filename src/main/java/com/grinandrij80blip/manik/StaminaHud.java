@@ -7,6 +7,7 @@ import net.minecraftforge.client.event.AddGuiOverlayLayersEvent;
 
 public final class StaminaHud {
     private static int stamina = 100;
+    private static int jumpBlockedTicks;
     private static boolean active;
 
     public static void register() {
@@ -22,15 +23,16 @@ public final class StaminaHud {
 
     public static void update(int value, int exhaustion, int jumpBlocked, boolean enabled) {
         stamina = Math.max(0, Math.min(100, value));
+        jumpBlockedTicks = Math.max(0, jumpBlocked);
         active = enabled;
     }
 
     public static void tickClient() {
-        // Kept as a lightweight client tick hook for the input handler.
+        if (jumpBlockedTicks > 0) jumpBlockedTicks--;
     }
 
     public static boolean isJumpBlocked() {
-        return false;
+        return active && jumpBlockedTicks > 0;
     }
 
     private static void render(GuiGraphics graphics, net.minecraft.client.DeltaTracker deltaTracker) {
