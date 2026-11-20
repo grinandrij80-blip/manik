@@ -129,6 +129,22 @@ public final class TrapManager {
         if (!(event.player() instanceof ServerPlayer player)) return;
 
         UUID playerId = player.getUUID();
+
+        // Detect the trap directly below the survivor's feet every server tick.
+        // This is reliable even when the trap's low custom collision shape does
+        // not cause Block.stepOn to fire on a particular movement edge.
+        if (GameConfig.isRunning()
+                && activeLevel != null
+                && player.level() == activeLevel
+                && player.getTags().contains("manik_survivor")
+                && player.onGround()
+                && !TRAPPED_PLAYERS.containsKey(playerId)) {
+            BlockPos underFeet = BlockPos.containing(player.getX(), player.getY() - 0.05, player.getZ());
+            if (activeLevel.getBlockState(underFeet).is(ManikBlocks.TRAP.get())) {
+                onTrapStepped(activeLevel, underFeet, player);
+            }
+        }
+
         BlockPos trappedAt = TRAPPED_PLAYERS.get(playerId);
         if (trappedAt != null) {
             boolean stillCaptured = player.isAlive()

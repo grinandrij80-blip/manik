@@ -136,13 +136,12 @@ public final class GameCommands {
             if (level.addFreshEntity(canister)) ACTIVE_ITEMS.add(canister.getUUID());
         }
 
-        // Remaining item points receive one random utility item: 50% crowbar, 50% medkit.
+        // Remaining item points receive only utility loot: 50% crowbar, 50% medkit. Traps are issued to killers.
         for (int i = canisterCount; i < itemSpawns.size(); i++) {
             BlockPos itemPos = itemSpawns.get(i);
-            int utilityRoll = java.util.concurrent.ThreadLocalRandom.current().nextInt(3);
+            int utilityRoll = java.util.concurrent.ThreadLocalRandom.current().nextInt(2);
             net.minecraft.world.item.ItemStack stack = new net.minecraft.world.item.ItemStack(
-                    utilityRoll == 0 ? ManikBlocks.TRAP_ITEM.get()
-                            : utilityRoll == 1 ? ManikItems.CROWBAR.get() : ManikItems.MEDKIT.get());
+                    utilityRoll == 0 ? ManikItems.CROWBAR.get() : ManikItems.MEDKIT.get());
             net.minecraft.world.entity.item.ItemEntity utilityItem = new net.minecraft.world.entity.item.ItemEntity(
                     level, itemPos.getX() + 0.5, itemPos.getY() + 1.02, itemPos.getZ() + 0.5, stack);
             if (level.addFreshEntity(utilityItem)) ACTIVE_ITEMS.add(utilityItem.getUUID());
@@ -155,6 +154,30 @@ public final class GameCommands {
             player.removeTag("manik_killer");
             player.removeTag("manik_survivor");
             player.addTag(killer ? "manik_killer" : "manik_survivor");
+
+            // A trap is a role item, not map loot: remove any leftover copy,
+            // then give exactly one directly to each killer.
+            for (int slot = 0; slot < player.getInventory().getContainerSize(); slot++) {
+                if (player.getInventory().getItem(slot).is(ManikBlocks.TRAP_ITEM.get())) {
+                    player.getInventory().setItem(slot, net.minecraft.world.item.ItemStack.EMPTY);
+                }
+            }
+            if (killer) {
+                int emptySlot = -1;
+                for (int slot = 0; slot < 36; slot++) {
+                    if (player.getInventory().getItem(slot).isEmpty()) {
+                        emptySlot = slot;
+                        break;
+                    }
+                }
+                if (emptySlot >= 0) {
+                    player.getInventory().setItem(emptySlot,
+                            new net.minecraft.world.item.ItemStack(ManikBlocks.TRAP_ITEM.get()));
+                    player.sendSystemMessage(Component.literal("Тобі видано капкан. Він багаторазовий і має перезарядку."));
+                } else {
+                    player.sendSystemMessage(Component.literal("У інвентарі немає вільного місця для капкана! Звільни слот."));
+                }
+            }
             player.teleportTo(level, spawn.getX() + 0.5, spawn.getY() + 1.0, spawn.getZ() + 0.5,
                     Set.of(), player.getYRot(), player.getXRot(), true);
             player.sendSystemMessage(Component.literal(killer ? "Твоя роль: МАНІЯК" : "Твоя роль: ВИЖИВШИЙ"));
