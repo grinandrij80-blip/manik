@@ -10,6 +10,9 @@ import net.minecraftforge.event.RegisterCommandsEvent;
 import net.minecraftforge.event.level.BlockEvent;
 import net.minecraftforge.event.level.ChunkEvent;
 import net.minecraftforge.event.entity.player.PlayerInteractEvent;
+import net.minecraftforge.event.entity.player.PlayerEvent;
+import net.minecraftforge.api.distmarker.Dist;
+import net.minecraftforge.fml.loading.FMLEnvironment;
 import net.minecraftforge.event.TickEvent;
 import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
 import net.minecraftforge.registries.DeferredRegister;
@@ -36,12 +39,15 @@ public final class ManikMod {
                     }).build());
 
     public ManikMod(FMLJavaModLoadingContext context) {
+        ManikNetwork.register();
+        if (FMLEnvironment.dist == Dist.CLIENT) ClientInputHandler.register();
         RegisterCommandsEvent.BUS.addListener(GameCommands::onRegisterCommands);
         BlockEvent.EntityPlaceEvent.BUS.addListener(SpawnPointManager::onBlockPlace);
         BlockEvent.BreakEvent.BUS.addListener(SpawnPointManager::onBlockBreak);
         ChunkEvent.Load.BUS.addListener(SpawnPointManager::onChunkLoad);
         PlayerInteractEvent.RightClickBlock.BUS.addListener(GeneratorManager::onRightClickBlock);
         TickEvent.PlayerTickEvent.Post.BUS.addListener(GeneratorManager::onPlayerTick);
+        PlayerEvent.PlayerLoggedOutEvent.BUS.addListener(GeneratorManager::onPlayerLogout);
         var modBusGroup = context.getModBusGroup();
         ManikBlocks.BLOCKS.register(modBusGroup);
         ManikItems.ITEMS.register(modBusGroup);

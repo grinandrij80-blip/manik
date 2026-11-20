@@ -161,6 +161,7 @@ public final class GameCommands {
         ACTIVE_ITEMS.clear();
         ACTIVE_GENERATORS.clear();
         activeLevel = null;
+        GeneratorManager.clearAllSessions();
         for (ServerPlayer player : source.getServer().getPlayerList().getPlayers()) {
             player.removeTag("manik_killer");
             player.removeTag("manik_survivor");
