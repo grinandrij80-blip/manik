@@ -29,6 +29,9 @@ public final class ManikBlocks {
     public static final RegistryObject<Block> KILLER_SPAWN = BLOCKS.register("killer_spawn",
             () -> new Block(BlockBehaviour.Properties.of().setId(BLOCKS.key("killer_spawn"))
                     .mapColor(MapColor.COLOR_RED).strength(0.5F).noOcclusion()));
+    public static final RegistryObject<Block> EXIT_DOOR = BLOCKS.register("exit_door",
+            () -> new ManikExitDoorBlock(BlockBehaviour.Properties.of().setId(BLOCKS.key("exit_door"))
+                    .mapColor(MapColor.COLOR_GRAY).strength(4.0F).noOcclusion()));
 
     public static final RegistryObject<Item> ITEM_SPAWN_ITEM = ITEMS.register("item_spawn",
             () -> new BlockItem(ITEM_SPAWN.get(), new Item.Properties().setId(ITEMS.key("item_spawn"))));
@@ -40,6 +43,8 @@ public final class ManikBlocks {
             () -> new BlockItem(SURVIVOR_SPAWN.get(), new Item.Properties().setId(ITEMS.key("survivor_spawn"))));
     public static final RegistryObject<Item> KILLER_SPAWN_ITEM = ITEMS.register("killer_spawn",
             () -> new BlockItem(KILLER_SPAWN.get(), new Item.Properties().setId(ITEMS.key("killer_spawn"))));
+    public static final RegistryObject<Item> EXIT_DOOR_ITEM = ITEMS.register("exit_door",
+            () -> new BlockItem(EXIT_DOOR.get(), new Item.Properties().setId(ITEMS.key("exit_door"))));
 
     private ManikBlocks() {}
 }

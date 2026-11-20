@@ -113,6 +113,10 @@ public final class GeneratorManager {
                     if (generator.strengthTicks >= 20) {
                         generator.strength = Math.min(100.0, generator.strength + 1.0);
                         generator.strengthTicks = 0;
+                        if (GameCommands.areAllGeneratorsReady(level)) {
+                            level.getServer().getPlayerList().broadcastSystemMessage(
+                                    Component.literal("MANIK: усі генератори готові! Двері виходу відчиняються."), false);
+                        }
                     }
                 }
             }
@@ -179,6 +183,11 @@ public final class GeneratorManager {
     public static void clearAllSessions() {
         USE_INPUT_HELD.clear();
         REFUELING.clear();
+    }
+
+    public static boolean isGeneratorReady(ServerLevel level, BlockPos pos) {
+        GeneratorState generator = GENERATORS.get(generatorKey(level, pos));
+        return generator != null && generator.fuel >= 100.0 && generator.strength >= 100.0;
     }
 
     public static void clearGenerator(ServerLevel level, BlockPos pos) {

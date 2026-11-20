@@ -18,6 +18,19 @@ public final class GameCommands {
     private static ServerLevel activeLevel;
     private static final List<BlockPos> ACTIVE_GENERATORS = new ArrayList<>();
     private static final List<UUID> ACTIVE_ITEMS = new ArrayList<>();
+
+    public static boolean areAllGeneratorsReady(ServerLevel level) {
+        if (!GameConfig.isRunning() || activeLevel != level || ACTIVE_GENERATORS.isEmpty()) {
+            return false;
+        }
+        for (BlockPos pos : ACTIVE_GENERATORS) {
+            if (!level.getBlockState(pos).is(ManikBlocks.GENERATOR.get())
+                    || !GeneratorManager.isGeneratorReady(level, pos)) {
+                return false;
+            }
+        }
+        return true;
+    }
     public static void onRegisterCommands(RegisterCommandsEvent event) {
         CommandDispatcher<CommandSourceStack> dispatcher = event.getDispatcher();
         dispatcher.register(Commands.literal("game")
@@ -101,6 +114,8 @@ public final class GameCommands {
         Collections.shuffle(killerSpawns);
         Collections.shuffle(survivorSpawns);
 
+        ACTIVE_GENERATORS.clear();
+        ACTIVE_ITEMS.clear();
         List<BlockPos> generatorSpawns = SpawnPointManager.get(level, SpawnPointManager.Type.GENERATOR);
         Collections.shuffle(generatorSpawns);
         for (int i = 0; i < GameConfig.generators(); i++) {
