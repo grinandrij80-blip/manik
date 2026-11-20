@@ -2,6 +2,7 @@ package com.grinandrij80blip.manik;
 
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.item.ItemStack;
 import net.minecraftforge.event.entity.player.AttackEntityEvent;
 
 /**
@@ -15,8 +16,12 @@ public final class GloveManager {
 
     public static boolean onAttackEntity(AttackEntityEvent event) {
         if (!(event.getEntity() instanceof ServerPlayer attacker)
-                || !(event.getTarget() instanceof ServerPlayer target)
-                || !attacker.getMainHandItem().is(ManikItems.MARK_GLOVE.get())
+                || !(event.getTarget() instanceof ServerPlayer target)) {
+            return false;
+        }
+
+        ItemStack glove = attacker.getMainHandItem();
+        if (!glove.is(ManikItems.MARK_GLOVE.get())
                 || !GameConfig.isRunning()
                 || !attacker.getTags().contains("manik_killer")
                 || !target.getTags().contains("manik_survivor")) {
@@ -24,7 +29,7 @@ public final class GloveManager {
         }
 
         // Cancel the ordinary hit; the glove supplies its own fixed damage.
-        if (attacker.getCooldowns().isOnCooldown(ManikItems.MARK_GLOVE.get())) {
+        if (attacker.getCooldowns().isOnCooldown(glove)) {
             attacker.displayClientMessage(
                     Component.literal("Рукавиця перезаряджається."), true);
             return true;
@@ -32,7 +37,7 @@ public final class GloveManager {
 
         float damage = target.getMaxHealth() / 3.0F;
         target.hurt(attacker.damageSources().playerAttack(attacker), damage);
-        attacker.getCooldowns().addCooldown(ManikItems.MARK_GLOVE.get(), COOLDOWN_TICKS);
+        attacker.getCooldowns().addCooldown(glove, COOLDOWN_TICKS);
 
         attacker.displayClientMessage(
                 Component.literal("Рукавицю використано. Перезарядка: 12 секунд."), true);
