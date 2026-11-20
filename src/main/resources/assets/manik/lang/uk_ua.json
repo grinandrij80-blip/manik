@@ -6,5 +6,6 @@
   "item.manik.canister": "Каністра з пальним",
   "item.manik.survivor_spawn": "Точка появи виживших",
   "item.manik.killer_spawn": "Точка появи маніяка",
-  "item.manik.mark_glove": "Рукавиця мітки"
+  "item.manik.mark_glove": "Рукавиця мітки",
+  "item.manik.generator": "Генератор"
 }

@@ -96,6 +96,24 @@ public final class GameCommands {
         Collections.shuffle(shuffledPlayers);
         Collections.shuffle(killerSpawns);
         Collections.shuffle(survivorSpawns);
+
+        List<BlockPos> generatorSpawns = SpawnPointManager.get(level, SpawnPointManager.Type.GENERATOR);
+        Collections.shuffle(generatorSpawns);
+        for (int i = 0; i < GameConfig.generators(); i++) {
+            BlockPos generatorPos = generatorSpawns.get(i);
+            level.setBlockAndUpdate(generatorPos, ManikBlocks.GENERATOR.get().defaultBlockState());
+        }
+
+        List<BlockPos> itemSpawns = SpawnPointManager.get(level, SpawnPointManager.Type.ITEM);
+        Collections.shuffle(itemSpawns);
+        int canisterCount = GameConfig.generators() * 2 + 3;
+        for (int i = 0; i < canisterCount; i++) {
+            BlockPos itemPos = itemSpawns.get(i);
+            net.minecraft.world.entity.item.ItemEntity canister = new net.minecraft.world.entity.item.ItemEntity(
+                    level, itemPos.getX() + 0.5, itemPos.getY() + 0.35, itemPos.getZ() + 0.5,
+                    new net.minecraft.world.item.ItemStack(ManikItems.CANISTER.get()));
+            level.addFreshEntity(canister);
+        }
         for (int i = 0; i < shuffledPlayers.size(); i++) {
             ServerPlayer player = shuffledPlayers.get(i);
             boolean killer = i < killers;
