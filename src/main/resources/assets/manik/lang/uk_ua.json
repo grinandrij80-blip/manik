@@ -7,5 +7,7 @@
   "item.manik.survivor_spawn": "Точка появи виживших",
   "item.manik.killer_spawn": "Точка появи маніяка",
   "item.manik.mark_glove": "Рукавиця мітки",
-  "item.manik.generator": "Генератор"
+  "item.manik.generator": "Генератор",
+  "block.manik.exit_door": "Спеціальні двері виходу",
+  "item.manik.exit_door": "Спеціальні двері виходу"
 }

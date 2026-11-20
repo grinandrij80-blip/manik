@@ -7,5 +7,7 @@
   "item.manik.survivor_spawn": "Survivor Spawn",
   "item.manik.killer_spawn": "Killer Spawn",
   "item.manik.mark_glove": "Marking Glove",
-  "item.manik.generator": "Portable Generator"
+  "item.manik.generator": "Portable Generator",
+  "block.manik.exit_door": "Special Exit Door",
+  "item.manik.exit_door": "Special Exit Door"
 }

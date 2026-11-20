@@ -1,0 +1,21 @@
+{
+  "parent": "minecraft:block/block",
+  "textures": {
+    "particle": "manik:block/exit_door",
+    "door": "manik:block/exit_door"
+  },
+  "elements": [
+    {
+      "from": [0, 0, 7],
+      "to": [16, 16, 9],
+      "faces": {
+        "north": {"texture": "#door"},
+        "south": {"texture": "#door"},
+        "east": {"texture": "#door"},
+        "west": {"texture": "#door"},
+        "up": {"texture": "#door"},
+        "down": {"texture": "#door"}
+      }
+    }
+  ]
+}
