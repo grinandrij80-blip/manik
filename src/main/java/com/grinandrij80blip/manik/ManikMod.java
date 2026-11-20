@@ -11,6 +11,7 @@ import net.minecraftforge.event.level.BlockEvent;
 import net.minecraftforge.event.level.ChunkEvent;
 import net.minecraftforge.event.entity.player.PlayerInteractEvent;
 import net.minecraftforge.event.entity.player.PlayerEvent;
+import net.minecraftforge.event.entity.player.AttackEntityEvent;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.fml.loading.FMLEnvironment;
 import net.minecraftforge.event.TickEvent;
@@ -58,6 +59,7 @@ public final class ManikMod {
         ChunkEvent.Load.BUS.addListener(SpawnPointManager::onChunkLoad);
         PlayerInteractEvent.RightClickBlock.BUS.addListener(GeneratorManager::onRightClickBlock);
         PlayerInteractEvent.RightClickBlock.BUS.addListener(TrapManager::onRightClickBlock);
+        AttackEntityEvent.BUS.addListener(GloveManager::onAttackEntity);
         TickEvent.PlayerTickEvent.Post.BUS.addListener(TrapManager::onPlayerTick);
         TickEvent.PlayerTickEvent.Post.BUS.addListener(GeneratorManager::onPlayerTick);
         TickEvent.PlayerTickEvent.Pre.BUS.addListener(StaminaManager::enforceNoSprint);
