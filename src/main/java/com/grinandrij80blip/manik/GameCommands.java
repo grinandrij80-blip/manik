@@ -161,7 +161,8 @@ public final class GameCommands {
             // A trap is a role item, not map loot: remove any leftover copy,
             // then give exactly one directly to each killer.
             for (int slot = 0; slot < player.getInventory().getContainerSize(); slot++) {
-                if (player.getInventory().getItem(slot).is(ManikBlocks.TRAP_ITEM.get())) {
+                if (player.getInventory().getItem(slot).is(ManikBlocks.TRAP_ITEM.get())
+                        || player.getInventory().getItem(slot).is(ManikItems.MARK_GLOVE.get())) {
                     player.getInventory().setItem(slot, net.minecraft.world.item.ItemStack.EMPTY);
                 }
             }
@@ -179,6 +180,22 @@ public final class GameCommands {
                     player.sendSystemMessage(Component.literal("Тобі видано капкан. Він багаторазовий і має перезарядку."));
                 } else {
                     player.sendSystemMessage(Component.literal("У інвентарі немає вільного місця для капкана! Звільни слот."));
+                }
+
+                int gloveSlot = -1;
+                for (int slot = 0; slot < 36; slot++) {
+                    if (player.getInventory().getItem(slot).isEmpty()) {
+                        gloveSlot = slot;
+                        break;
+                    }
+                }
+                if (gloveSlot >= 0) {
+                    player.getInventory().setItem(gloveSlot,
+                            new net.minecraft.world.item.ItemStack(ManikItems.MARK_GLOVE.get()));
+                    player.sendSystemMessage(Component.literal(
+                            "Тобі видано рукавицю: влучання знімає 1/3 максимального здоров'я. Перезарядка: 12 секунд."));
+                } else {
+                    player.sendSystemMessage(Component.literal("Немає вільного місця для рукавиці! Звільни слот."));
                 }
             }
             player.teleportTo(level, spawn.getX() + 0.5, spawn.getY() + 1.0, spawn.getZ() + 0.5,
