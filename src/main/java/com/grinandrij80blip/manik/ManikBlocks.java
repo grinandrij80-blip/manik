@@ -16,19 +16,19 @@ public final class ManikBlocks {
 
     public static final RegistryObject<Block> ITEM_SPAWN = BLOCKS.register("item_spawn",
             () -> new SpawnMarkerBlock(BlockBehaviour.Properties.of().setId(BLOCKS.key("item_spawn"))
-                    .mapColor(MapColor.COLOR_YELLOW).strength(0.5F).noOcclusion().noCollission()));
+                    .mapColor(MapColor.COLOR_YELLOW).strength(0.5F).noOcclusion().noCollision()));
     public static final RegistryObject<Block> GENERATOR_SPAWN = BLOCKS.register("generator_spawn",
             () -> new SpawnMarkerBlock(BlockBehaviour.Properties.of().setId(BLOCKS.key("generator_spawn"))
-                    .mapColor(MapColor.COLOR_BLUE).strength(0.5F).noOcclusion().noCollission()));
+                    .mapColor(MapColor.COLOR_BLUE).strength(0.5F).noOcclusion().noCollision()));
     public static final RegistryObject<Block> GENERATOR = BLOCKS.register("generator",
             () -> new Block(BlockBehaviour.Properties.of().setId(BLOCKS.key("generator"))
                     .mapColor(MapColor.COLOR_ORANGE).strength(3.0F).noOcclusion()));
     public static final RegistryObject<Block> SURVIVOR_SPAWN = BLOCKS.register("survivor_spawn",
             () -> new SpawnMarkerBlock(BlockBehaviour.Properties.of().setId(BLOCKS.key("survivor_spawn"))
-                    .mapColor(MapColor.COLOR_GREEN).strength(0.5F).noOcclusion().noCollission()));
+                    .mapColor(MapColor.COLOR_GREEN).strength(0.5F).noOcclusion().noCollision()));
     public static final RegistryObject<Block> KILLER_SPAWN = BLOCKS.register("killer_spawn",
             () -> new SpawnMarkerBlock(BlockBehaviour.Properties.of().setId(BLOCKS.key("killer_spawn"))
-                    .mapColor(MapColor.COLOR_RED).strength(0.5F).noOcclusion().noCollission()));
+                    .mapColor(MapColor.COLOR_RED).strength(0.5F).noOcclusion().noCollision()));
     public static final RegistryObject<Block> EXIT_DOOR = BLOCKS.register("exit_door",
             () -> new ManikExitDoorBlock(BlockBehaviour.Properties.of().setId(BLOCKS.key("exit_door"))
                     .mapColor(MapColor.COLOR_GRAY).strength(4.0F).noOcclusion()));
