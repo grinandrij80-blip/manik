@@ -48,6 +48,7 @@ public final class ManikMod {
         if (FMLEnvironment.dist == Dist.CLIENT) {
             ClientInputHandler.register();
             StaminaHud.register();
+            ManiacClient.register();
         }
         RegisterCommandsEvent.BUS.addListener(GameCommands::onRegisterCommands);
         BlockEvent.EntityPlaceEvent.BUS.addListener(SpawnPointManager::onBlockPlace);
@@ -64,13 +65,17 @@ public final class ManikMod {
         TickEvent.PlayerTickEvent.Post.BUS.addListener(GeneratorManager::onPlayerTick);
         TickEvent.PlayerTickEvent.Pre.BUS.addListener(StaminaManager::enforceNoSprint);
         TickEvent.PlayerTickEvent.Post.BUS.addListener(StaminaManager::onPlayerTick);
+        TickEvent.PlayerTickEvent.Post.BUS.addListener(ManiacBodyManager::onPlayerTick);
+        net.minecraftforge.event.entity.EntityAttributeCreationEvent.BUS.addListener(ManikEntities::onAttributes);
         net.minecraftforge.event.entity.living.LivingEvent.LivingJumpEvent.BUS.addListener(StaminaManager::onLivingJump);
         PlayerEvent.PlayerLoggedOutEvent.BUS.addListener(GeneratorManager::onPlayerLogout);
         PlayerEvent.PlayerLoggedOutEvent.BUS.addListener(StaminaManager::onLogout);
         PlayerEvent.PlayerLoggedOutEvent.BUS.addListener(GloveManager::onLogout);
+        PlayerEvent.PlayerLoggedOutEvent.BUS.addListener(ManiacBodyManager::onLogout);
         var modBusGroup = context.getModBusGroup();
         ManikBlocks.BLOCKS.register(modBusGroup);
         ManikItems.ITEMS.register(modBusGroup);
+        ManikEntities.ENTITY_TYPES.register(modBusGroup);
         CREATIVE_TABS.register(modBusGroup);
     }
 }
