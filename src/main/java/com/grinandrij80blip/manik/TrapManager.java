@@ -25,6 +25,8 @@ import java.util.UUID;
 public final class TrapManager {
     public static final int TRAP_COOLDOWN_TICKS = 55 * 20;
     public static final int CROWBAR_COOLDOWN_TICKS = 7 * 20;
+    /** Fixed trap damage in health points (4 HP = 2 hearts). */
+    public static final float TRAP_DAMAGE = 4.0F;
     private static final Set<BlockPos> ACTIVE_TRAPS = new HashSet<>();
     private static final Map<UUID, BlockPos> TRAPPED_PLAYERS = new HashMap<>();
     private static ServerLevel activeLevel;
@@ -46,6 +48,11 @@ public final class TrapManager {
         if (GameConfig.isRunning()) {
             if (!player.getTags().contains("manik_killer")) {
                 player.displayClientMessage(Component.literal("Капкани може встановлювати лише маніяк."), true);
+                return true;
+            }
+
+            if (StaminaManager.isStunned(player)) {
+                player.displayClientMessage(Component.literal("Ти оглушений і не можеш ставити капкани."), true);
                 return true;
             }
 
@@ -217,14 +224,13 @@ public final class TrapManager {
             return;
         }
 
-        float damage = player.getMaxHealth() / 3.0F;
-        player.hurt(serverLevel.damageSources().generic(), damage);
+        player.hurt(serverLevel.damageSources().generic(), TRAP_DAMAGE);
         if (player.isAlive()) {
             BlockPos immutablePos = pos.immutable();
             TRAPPED_PLAYERS.put(player.getUUID(), immutablePos);
             holdAtTrap(player, immutablePos);
             player.displayClientMessage(
-                    Component.literal("Ти потрапив у капкан! Втрачено 1/3 здоров'я. Не можеш вибратися, доки капкан не знешкодять."),
+                    Component.literal("Ти потрапив у капкан! Втрачено 4 HP (2 серця). Не можеш вибратися, доки капкан не знешкодять."),
                     true);
         }
     }

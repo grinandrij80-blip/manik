@@ -48,6 +48,7 @@ public final class StaminaManager {
         double stamina = 100.0;
         long exhaustedUntil;
         long jumpBlockedUntil;
+        long stunnedUntil;
         int lastSentStamina = -1;
         int lastSentExhaustion = -1;
         int lastSentJumpBlocked = -1;
@@ -55,6 +56,36 @@ public final class StaminaManager {
     }
 
     private static final Map<UUID, StaminaState> STATES = new HashMap<>();
+
+    /** True while a crowbar hit keeps this maniac stunned. */
+    public static boolean isStunned(ServerPlayer player) {
+        StaminaState state = STATES.get(player.getUUID());
+        return state != null && player.level().getGameTime() < state.stunnedUntil;
+    }
+
+    /**
+     * Stuns a maniac for the given number of ticks: no movement (maximum
+     * slowness), no jumping (server lock plus the client-synced jump block),
+     * and the glove and trap placement check isStunned(). Returns false if
+     * the maniac is already stunned, so a second hit cannot stack or extend it.
+     */
+    public static boolean stunKiller(ServerPlayer killer, int ticks) {
+        StaminaState state = STATES.computeIfAbsent(killer.getUUID(), ignored -> new StaminaState());
+        long now = killer.level().getGameTime();
+        if (now < state.stunnedUntil) return false;
+
+        state.stunnedUntil = now + ticks;
+        state.jumpBlockedUntil = Math.max(state.jumpBlockedUntil, now + ticks);
+        killer.setSprinting(false);
+        killer.addEffect(new MobEffectInstance(MobEffects.SLOWNESS, ticks, 255, false, true, true));
+        return true;
+    }
+
+    private static void clearStun(ServerPlayer player, StaminaState state) {
+        if (state != null && player.level().getGameTime() < state.stunnedUntil) {
+            player.removeEffect(MobEffects.SLOWNESS);
+        }
+    }
 
     /** Apply the role lock before vanilla movement processing on the server. */
     public static void enforceNoSprint(TickEvent.PlayerTickEvent.Pre event) {
@@ -77,6 +108,7 @@ public final class StaminaManager {
             setScale(player, 1.0D);
             setWalkSpeed(player, SURVIVOR_WALK_SPEED);
             StaminaState removed = STATES.remove(id);
+            clearStun(player, removed);
             if (removed != null) ManikNetwork.sendStamina(player, 100, 0, 0, false, true);
             return;
         }
@@ -116,7 +148,8 @@ public final class StaminaManager {
             state.stamina = Math.min(100.0, state.stamina + 0.5);
         }
 
-        if (!killer && now < state.jumpBlockedUntil) {
+        // Survivors get this lock after exhaustion, maniacs only while stunned.
+        if (now < state.jumpBlockedUntil) {
             player.setSprinting(false);
             Vec3 movement = player.getDeltaMovement();
             if (movement.y() > 0.0) {
@@ -172,7 +205,7 @@ public final class StaminaManager {
         for (ServerPlayer player : players) {
             setScale(player, 1.0D);
             setWalkSpeed(player, SURVIVOR_WALK_SPEED);
-            STATES.remove(player.getUUID());
+            clearStun(player, STATES.remove(player.getUUID()));
             ManikNetwork.sendStamina(player, 100, 0, 0, false, true);
         }
     }
@@ -181,7 +214,7 @@ public final class StaminaManager {
         if (event.getEntity() instanceof ServerPlayer player) {
             setScale(player, 1.0D);
             setWalkSpeed(player, SURVIVOR_WALK_SPEED);
-            STATES.remove(player.getUUID());
+            clearStun(player, STATES.remove(player.getUUID()));
         }
     }
 

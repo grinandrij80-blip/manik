@@ -13,6 +13,8 @@ import net.minecraft.world.level.Level;
 
 public final class MedkitItem extends Item {
     public static final int USE_TICKS = 60;
+    /** Fixed healing in health points (4 HP = 2 hearts). */
+    public static final float HEAL_AMOUNT = 4.0F;
 
     public MedkitItem(Properties properties) {
         super(properties);
@@ -44,7 +46,7 @@ public final class MedkitItem extends Item {
     @Override
     public ItemStack finishUsingItem(ItemStack stack, Level level, LivingEntity living) {
         if (!level.isClientSide() && living instanceof Player player) {
-            player.heal(player.getMaxHealth() / 3.0F);
+            player.heal(HEAL_AMOUNT);
             if (!player.getAbilities().instabuild) stack.shrink(1);
         }
         return stack;

@@ -194,7 +194,7 @@ public final class GameCommands {
                     player.getInventory().setItem(gloveSlot,
                             new net.minecraft.world.item.ItemStack(ManikItems.MARK_GLOVE.get()));
                     player.sendSystemMessage(Component.literal(
-                            "Тобі видано рукавицю: влучання знімає 1/3 максимального здоров'я. Перезарядка: 12 секунд."));
+                            "Тобі видано рукавицю: влучання знімає 4 HP (2 серця), третє влучання вибуває з раунду. Перезарядка: 12 секунд."));
                 } else {
                     player.sendSystemMessage(Component.literal("Немає вільного місця для рукавиці! Звільни слот."));
                 }

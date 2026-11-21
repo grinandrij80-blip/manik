@@ -39,7 +39,9 @@ public final class StaminaHud {
     }
 
     public static boolean isJumpBlocked() {
-        return active && jumpBlockedTicks > 0;
+        // Not tied to the stamina bar: a stunned maniac has no visible bar
+        // but must still be unable to jump on the client.
+        return jumpBlockedTicks > 0;
     }
 
     private static void render(GuiGraphics graphics, net.minecraft.client.DeltaTracker deltaTracker) {
