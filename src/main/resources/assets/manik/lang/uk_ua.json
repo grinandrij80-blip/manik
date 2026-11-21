@@ -13,5 +13,6 @@
   "item.manik.medkit": "Аптечка",
   "item.manik.crowbar": "Лом",
   "block.manik.trap": "Капкан",
-  "item.manik.trap": "Капкан"
+  "item.manik.trap": "Капкан",
+  "entity.manik.maniac_body": "Маніяк"
 }

@@ -13,5 +13,6 @@
   "item.manik.medkit": "Medkit",
   "item.manik.crowbar": "Crowbar",
   "block.manik.trap": "Trap",
-  "item.manik.trap": "Trap"
+  "item.manik.trap": "Trap",
+  "entity.manik.maniac_body": "Maniac"
 }

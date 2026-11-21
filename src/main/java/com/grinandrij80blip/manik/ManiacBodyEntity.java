@@ -1,5 +1,9 @@
 package com.grinandrij80blip.manik;
 
+import net.minecraft.network.syncher.EntityDataAccessor;
+import net.minecraft.network.syncher.EntityDataSerializers;
+import net.minecraft.network.syncher.SynchedEntityData;
+import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.HumanoidArm;
 import net.minecraft.world.entity.LivingEntity;
@@ -7,11 +11,16 @@ import net.minecraft.world.level.Level;
 
 /**
  * Visual stand-in for a maniac. It has no physics, cannot be hit or pushed and is
- * never saved; ManiacBodyManager moves it onto the maniac every tick on the server.
- * Walking is derived from how far the entity moved, so it works the same on the
- * client without extra packets. The attack swing uses the vanilla swing animation.
+ * never saved. The server spawns it and tells every client which player it belongs
+ * to; clients then copy that player's position, rotation, walk cycle and arm swing
+ * every frame (see ManiacBodyRenderer), so the model moves exactly with the maniac
+ * instead of trailing behind network updates.
  */
 public final class ManiacBodyEntity extends LivingEntity {
+    private static final EntityDataAccessor<Integer> OWNER_ID =
+            SynchedEntityData.defineId(ManiacBodyEntity.class, EntityDataSerializers.INT);
+
+    // Fallback walk animation, used only while the owner is not known on the client.
     public float animPos;
     public float animPosO;
     public float animSpeed;
@@ -22,6 +31,27 @@ public final class ManiacBodyEntity extends LivingEntity {
         this.noPhysics = true;
         this.setNoGravity(true);
         this.setInvulnerable(true);
+    }
+
+    @Override
+    protected void defineSynchedData(SynchedEntityData.Builder builder) {
+        super.defineSynchedData(builder);
+        builder.define(OWNER_ID, -1);
+    }
+
+    /** Entity id of the maniac player this body belongs to, or -1. */
+    public int getOwnerId() {
+        return this.entityData.get(OWNER_ID);
+    }
+
+    public void setOwnerId(int ownerId) {
+        this.entityData.set(OWNER_ID, ownerId);
+    }
+
+    /** The owning player as known on this side of the connection, or null. */
+    public Entity getOwner() {
+        int id = this.getOwnerId();
+        return id < 0 ? null : this.level().getEntity(id);
     }
 
     @Override
@@ -42,6 +72,14 @@ public final class ManiacBodyEntity extends LivingEntity {
 
     @Override
     public void tick() {
+        if (this.level().isClientSide()) {
+            Entity owner = this.getOwner();
+            if (owner != null) {
+                // Keep the bounding box (and so frustum culling) on the player.
+                this.setPos(owner.getX(), owner.getY(), owner.getZ());
+            }
+        }
+
         this.animPosO = this.animPos;
         this.animSpeedO = this.animSpeed;
         super.tick();
