@@ -58,6 +58,8 @@ public final class ManikMod {
                 (java.util.function.Predicate<BlockEvent.BreakEvent>) TrapManager::onBlockBreak);
         BlockEvent.BreakEvent.BUS.addListener(SpawnPointManager::onBlockBreak);
         ChunkEvent.Load.BUS.addListener(SpawnPointManager::onChunkLoad);
+        net.minecraftforge.event.entity.player.EntityItemPickupEvent.BUS.addListener(
+                (java.util.function.Predicate<net.minecraftforge.event.entity.player.EntityItemPickupEvent>) PickupGuard::onPickup);
         PlayerInteractEvent.RightClickBlock.BUS.addListener(GeneratorManager::onRightClickBlock);
         PlayerInteractEvent.RightClickBlock.BUS.addListener(TrapManager::onRightClickBlock);
         AttackEntityEvent.BUS.addListener(GloveManager::onAttackEntity);
