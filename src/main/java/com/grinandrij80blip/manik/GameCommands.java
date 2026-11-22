@@ -253,7 +253,7 @@ public final class GameCommands {
         }
 
         ExitManager.beginRound(level, survivorIds);
-        RoundCleanup.restoreCrates(level);
+        CarryManager.beginRound(level);
         GameConfig.setRunning(true);
         source.getServer().getPlayerList().broadcastSystemMessage(
                 Component.literal("MANIK: гру розпочато! Маніяків: " + killers

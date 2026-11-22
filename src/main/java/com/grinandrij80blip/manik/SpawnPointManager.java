@@ -201,7 +201,7 @@ public final class SpawnPointManager {
         if (block == ManikBlocks.EXIT_SPAWN.get()) {
             return Type.EXIT;
         }
-        if (block == ManikBlocks.FLARE_CRATE.get()) {
+        if (block == ManikBlocks.CRATE_SPAWN.get()) {
             return Type.CRATE;
         }
         if (block == ManikBlocks.LOBBY_SPAWN.get()) {

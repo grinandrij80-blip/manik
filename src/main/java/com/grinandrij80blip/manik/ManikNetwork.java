@@ -15,12 +15,13 @@ public final class ManikNetwork {
 
     private record ExitSyncPacket(int phase, int ticksLeft) {}
     private record ShakePacket(int ticks) {}
+    private record CarryPacket(boolean carrying) {}
     private record JumpscarePacket() {}
     private record PowerRequestPacket(int slot) {}
     private record PowerSyncPacket(int cooldown1, int active1, int cooldown2, int active2, boolean enabled) {}
 
     private static final SimpleChannel CHANNEL =
-            ChannelBuilder.named("manik:main").networkProtocolVersion(8).simpleChannel();
+            ChannelBuilder.named("manik:main").networkProtocolVersion(9).simpleChannel();
 
     private static final StreamCodec<RegistryFriendlyByteBuf, UseInputPacket> USE_INPUT_CODEC =
             StreamCodec.of(
@@ -78,6 +79,12 @@ public final class ManikNetwork {
                     buffer -> new ShakePacket(buffer.readVarInt())
             );
 
+    private static final StreamCodec<RegistryFriendlyByteBuf, CarryPacket> CARRY_CODEC =
+            StreamCodec.of(
+                    (buffer, packet) -> buffer.writeBoolean(packet.carrying()),
+                    buffer -> new CarryPacket(buffer.readBoolean())
+            );
+
     public static void register() {
         CHANNEL.play().flow(PacketFlow.SERVERBOUND)
                 .addMain(UseInputPacket.class, USE_INPUT_CODEC, (packet, context) -> {
@@ -102,6 +109,8 @@ public final class ManikNetwork {
                         (packet, context) -> PowerHud.update(
                                 packet.cooldown1(), packet.active1(),
                                 packet.cooldown2(), packet.active2(), packet.enabled()))
+                .addMain(CarryPacket.class, CARRY_CODEC,
+                        (packet, context) -> CarryState.set(packet.carrying()))
                 .addMain(JumpscarePacket.class, JUMPSCARE_CODEC,
                         (packet, context) -> JumpscareHud.start())
                 .build();
@@ -127,6 +136,10 @@ public final class ManikNetwork {
                                  int cooldown2, int active2, boolean enabled) {
         CHANNEL.send(new PowerSyncPacket(cooldown1, active1, cooldown2, active2, enabled),
                 PacketDistributor.PLAYER.with(player));
+    }
+
+    public static void sendCarry(ServerPlayer player, boolean carrying) {
+        CHANNEL.send(new CarryPacket(carrying), PacketDistributor.PLAYER.with(player));
     }
 
     public static void sendJumpscare(ServerPlayer player) {

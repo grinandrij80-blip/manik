@@ -27,8 +27,19 @@ public final class ManikEntities {
                     .updateInterval(1)
                     .build(ENTITY_TYPES.key("maniac_body")));
 
+    public static final RegistryObject<EntityType<HelicopterEntity>> HELICOPTER =
+            ENTITY_TYPES.register("helicopter", () -> EntityType.Builder
+                    .<HelicopterEntity>of(HelicopterEntity::new, MobCategory.MISC)
+                    .sized(6.0F, 3.0F)
+                    .noSave()
+                    .noSummon()
+                    .clientTrackingRange(16)
+                    .updateInterval(1)
+                    .build(ENTITY_TYPES.key("helicopter")));
+
     public static void onAttributes(EntityAttributeCreationEvent event) {
         event.put(MANIAC_BODY.get(), LivingEntity.createLivingAttributes().build());
+        event.put(HELICOPTER.get(), LivingEntity.createLivingAttributes().build());
     }
 
     private ManikEntities() {}

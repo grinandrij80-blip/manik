@@ -46,6 +46,10 @@ public final class ExitManager {
     private static List<BlockPos> exits = new ArrayList<>();
     private static Vec3 flareSite = Vec3.ZERO;
     private static boolean rocketErrorShown;
+    private static HelicopterEntity heli;
+    private static Vec3 heliStart = Vec3.ZERO;
+    private static Vec3 heliTarget = Vec3.ZERO;
+    private static final int HELI_APPROACH_TICKS = 200;
     private static final Set<UUID> SURVIVORS = new HashSet<>();
     private static final Set<UUID> ESCAPED = new HashSet<>();
     private static final Set<UUID> DEAD = new HashSet<>();
@@ -118,10 +122,22 @@ public final class ExitManager {
                 Sfx.at(level, flareSite.x, flareSite.y + 10, flareSite.z,
                         SoundEvents.ENDER_DRAGON_FLAP, 3.0F + (200 - ticksLeft) / 40.0F, 0.6F);
             }
+            if (ticksLeft == HELI_APPROACH_TICKS) spawnHeli();
+            if (heli != null) {
+                float p = Math.min(1.0F, (HELI_APPROACH_TICKS - ticksLeft) / (float) HELI_APPROACH_TICKS);
+                float eased = 1.0F - (1.0F - p) * (1.0F - p) * (1.0F - p);
+                placeHeli(heliStart.lerp(heliTarget, eased));
+            }
             if (ticksLeft <= 0) arrive(server);
         } else if (phase == PHASE_OPEN) {
+            int t = ARRIVED_SHOW_TICKS - ticksLeft;
+            if (heli != null && t > 40) {
+                // After boarding, the helicopter climbs away.
+                placeHeli(heliTarget.add(0.0, (t - 40) * 0.4, 0.0));
+            }
             if (--ticksLeft <= 0) {
                 phase = PHASE_NONE;
+                removeHeli();
                 syncAll(server);
             }
         }
@@ -174,6 +190,13 @@ public final class ExitManager {
         syncAll(server);
     }
 
+    /** True when the player stands inside any exit zone (used by the crate carrier). */
+    public static boolean isInExitZone(ServerPlayer player) {
+        if (level == null) return false;
+        if (exits.isEmpty()) exits = SpawnPointManager.get(level, SpawnPointManager.Type.EXIT);
+        return zoneAt(player) != null;
+    }
+
     /** The exit block whose zone the player is standing in, or null. */
     private static BlockPos zoneAt(ServerPlayer player) {
         if (player.level() != level) return null;
@@ -185,6 +208,30 @@ public final class ExitManager {
             }
         }
         return null;
+    }
+
+    private static void spawnHeli() {
+        removeHeli();
+        double angle = level.getRandom().nextDouble() * Math.PI * 2.0;
+        heliTarget = new Vec3(flareSite.x, flareSite.y + 7.0, flareSite.z);
+        heliStart = heliTarget.add(Math.cos(angle) * 45.0, 18.0, Math.sin(angle) * 45.0);
+        heli = new HelicopterEntity(ManikEntities.HELICOPTER.get(), level);
+        Vec3 d = heliTarget.subtract(heliStart);
+        float yaw = (float) (Math.atan2(-d.x, d.z) * 57.29577951308232);
+        heli.setPos(heliStart.x, heliStart.y, heliStart.z);
+        heli.setYRot(yaw);
+        heli.setYBodyRot(yaw);
+        heli.setYHeadRot(yaw);
+        level.addFreshEntity(heli);
+    }
+
+    private static void placeHeli(Vec3 pos) {
+        if (heli != null && !heli.isRemoved()) heli.setPos(pos.x, pos.y, pos.z);
+    }
+
+    private static void removeHeli() {
+        if (heli != null) heli.discard();
+        heli = null;
     }
 
     private static void showZones() {
@@ -260,6 +307,7 @@ public final class ExitManager {
         ticksLeft = 0;
         doorsOpen = false;
         launched = false;
+        removeHeli();
         level = null;
         syncAll(server);
     }

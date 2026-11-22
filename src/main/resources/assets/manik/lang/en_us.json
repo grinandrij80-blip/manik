@@ -29,5 +29,8 @@
   "block.manik.flare_crate": "Flare crate",
   "item.manik.flare_crate": "Flare crate",
   "block.manik.lobby_spawn": "Lobby point",
-  "item.manik.lobby_spawn": "Lobby point"
+  "item.manik.lobby_spawn": "Lobby point",
+  "block.manik.crate_spawn": "Flare crate spawn",
+  "item.manik.crate_spawn": "Flare crate spawn",
+  "entity.manik.helicopter": "Helicopter"
 }

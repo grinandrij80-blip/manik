@@ -11,10 +11,12 @@ public final class ManiacClient {
 
     private static void onLayers(EntityRenderersEvent.RegisterLayerDefinitions event) {
         event.registerLayerDefinition(ManiacBodyModel.LAYER, ManiacBodyModel::createBodyLayer);
+        event.registerLayerDefinition(HelicopterModel.LAYER, HelicopterModel::createBodyLayer);
     }
 
     private static void onRenderers(EntityRenderersEvent.RegisterRenderers event) {
         event.registerEntityRenderer(ManikEntities.MANIAC_BODY.get(), ManiacBodyRenderer::new);
+        event.registerEntityRenderer(ManikEntities.HELICOPTER.get(), HelicopterRenderer::new);
     }
 
     private ManiacClient() {}

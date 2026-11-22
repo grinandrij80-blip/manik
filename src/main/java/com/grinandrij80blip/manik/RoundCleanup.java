@@ -8,7 +8,6 @@ import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.level.GameType;
-import net.minecraft.world.level.block.Blocks;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -26,7 +25,7 @@ public final class RoundCleanup {
             for (Entity entity : items) entity.discard();
         }
 
-        restoreCrates(level);
+        CarryManager.endRound(level, server);
 
         List<BlockPos> lobbies = SpawnPointManager.get(level, SpawnPointManager.Type.LOBBY);
         int index = 0;
@@ -49,15 +48,6 @@ public final class RoundCleanup {
         if (lobbies.isEmpty()) {
             server.getPlayerList().broadcastSystemMessage(Component.literal(
                     "MANIK: на карті немає блока лоббі, тому гравців не телепортовано."), false);
-        }
-    }
-
-    /** Puts the flare crates back into their room (picked-up crates leave an empty spot). */
-    public static void restoreCrates(ServerLevel level) {
-        for (BlockPos pos : SpawnPointManager.get(level, SpawnPointManager.Type.CRATE)) {
-            if (level.getBlockState(pos).is(Blocks.AIR)) {
-                level.setBlockAndUpdate(pos, ManikBlocks.FLARE_CRATE.get().defaultBlockState());
-            }
         }
     }
 

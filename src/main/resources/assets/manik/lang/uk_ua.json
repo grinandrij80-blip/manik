@@ -29,5 +29,8 @@
   "block.manik.flare_crate": "Ящик сигнальних ракет",
   "item.manik.flare_crate": "Ящик сигнальних ракет",
   "block.manik.lobby_spawn": "Точка лоббі",
-  "item.manik.lobby_spawn": "Точка лоббі"
+  "item.manik.lobby_spawn": "Точка лоббі",
+  "block.manik.crate_spawn": "Точка появи ящика ракет",
+  "item.manik.crate_spawn": "Точка появи ящика ракет",
+  "entity.manik.helicopter": "Вертоліт"
 }

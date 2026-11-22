@@ -38,7 +38,7 @@ public final class ManikMod {
                         output.accept(ManikBlocks.KILLER_SPAWN_ITEM.get());
                         output.accept(ManikBlocks.EXIT_DOOR_ITEM.get());
                         output.accept(ManikBlocks.EXIT_DOOR2_ITEM.get());
-                        output.accept(ManikBlocks.FLARE_CRATE_ITEM.get());
+                        output.accept(ManikBlocks.CRATE_SPAWN_ITEM.get());
                         output.accept(ManikBlocks.LOBBY_SPAWN_ITEM.get());
                         output.accept(ManikBlocks.EXIT_SPAWN_ITEM.get());
                         output.accept(ManikBlocks.ROUND_LEVER_ITEM.get());
@@ -61,6 +61,7 @@ public final class ManikMod {
             ExitHud.register();
             ShakeClient.register();
             JumpscareHud.register();
+            CarryHud.register();
         }
         RegisterCommandsEvent.BUS.addListener(GameCommands::onRegisterCommands);
         BlockEvent.EntityPlaceEvent.BUS.addListener(SpawnPointManager::onBlockPlace);
@@ -75,6 +76,12 @@ public final class ManikMod {
         PlayerInteractEvent.RightClickBlock.BUS.addListener(GeneratorManager::onRightClickBlock);
         PlayerInteractEvent.RightClickBlock.BUS.addListener(TrapManager::onRightClickBlock);
         AttackEntityEvent.BUS.addListener(GloveManager::onAttackEntity);
+        AttackEntityEvent.BUS.addListener(CarryManager::onAttack);
+        PlayerInteractEvent.RightClickBlock.BUS.addListener(CarryManager::onRightClickBlock);
+        PlayerInteractEvent.RightClickItem.BUS.addListener(
+                (java.util.function.Predicate<PlayerInteractEvent.RightClickItem>) CarryManager::onRightClickItem);
+        TickEvent.PlayerTickEvent.Post.BUS.addListener(CarryManager::onPlayerTick);
+        PlayerEvent.PlayerLoggedOutEvent.BUS.addListener(CarryManager::onLogout);
         TickEvent.PlayerTickEvent.Post.BUS.addListener(TrapManager::onPlayerTick);
         TickEvent.PlayerTickEvent.Post.BUS.addListener(GeneratorManager::onPlayerTick);
         TickEvent.PlayerTickEvent.Pre.BUS.addListener(StaminaManager::enforceNoSprint);

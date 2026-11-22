@@ -38,6 +38,9 @@ public final class ManikBlocks {
     public static final RegistryObject<Block> LOBBY_SPAWN = BLOCKS.register("lobby_spawn",
             () -> new SpawnMarkerBlock(BlockBehaviour.Properties.of().setId(BLOCKS.key("lobby_spawn"))
                     .mapColor(MapColor.COLOR_LIGHT_BLUE).strength(0.5F).noOcclusion().noCollision()));
+    public static final RegistryObject<Block> CRATE_SPAWN = BLOCKS.register("crate_spawn",
+            () -> new SpawnMarkerBlock(BlockBehaviour.Properties.of().setId(BLOCKS.key("crate_spawn"))
+                    .mapColor(MapColor.COLOR_ORANGE).strength(0.5F).noOcclusion().noCollision()));
     public static final RegistryObject<Block> EXIT_DOOR2 = BLOCKS.register("exit_door2",
             () -> new ManikExitDoor2Block(BlockBehaviour.Properties.of().setId(BLOCKS.key("exit_door2"))
                     .mapColor(MapColor.COLOR_GRAY).strength(4.0F).noOcclusion()));
@@ -69,9 +72,8 @@ public final class ManikBlocks {
             () -> new BlockItem(LOBBY_SPAWN.get(), new Item.Properties().setId(ITEMS.key("lobby_spawn"))));
     public static final RegistryObject<Item> EXIT_DOOR2_ITEM = ITEMS.register("exit_door2",
             () -> new BlockItem(EXIT_DOOR2.get(), new Item.Properties().setId(ITEMS.key("exit_door2"))));
-    public static final RegistryObject<Item> FLARE_CRATE_ITEM = ITEMS.register("flare_crate",
-            () -> new FlareCrateItem(FLARE_CRATE.get(), new Item.Properties()
-                    .setId(ITEMS.key("flare_crate")).stacksTo(1)));
+    public static final RegistryObject<Item> CRATE_SPAWN_ITEM = ITEMS.register("crate_spawn",
+            () -> new BlockItem(CRATE_SPAWN.get(), new Item.Properties().setId(ITEMS.key("crate_spawn"))));
     public static final RegistryObject<Item> EXIT_DOOR_ITEM = ITEMS.register("exit_door",
             () -> new BlockItem(EXIT_DOOR.get(), new Item.Properties().setId(ITEMS.key("exit_door"))));
     public static final RegistryObject<Item> TRAP_ITEM = ITEMS.register("trap",
