@@ -1,6 +1,8 @@
 package com.grinandrij80blip.manik;
 
 import net.minecraft.network.chat.Component;
+import net.minecraft.network.protocol.game.ClientboundSetTitleTextPacket;
+import net.minecraft.network.protocol.game.ClientboundSetTitlesAnimationPacket;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.item.ItemStack;
@@ -17,6 +19,12 @@ public final class GloveManager {
     public static final float HIT_DAMAGE = 8.0F;
     /** How long a crowbar hit stuns the maniac. */
     public static final int CROWBAR_STUN_TICKS = 3 * 20;
+    /** The stun gun stuns the maniac longer and never slips. */
+    public static final int STUN_GUN_STUN_TICKS = 8 * 20;
+    /** Chance that a crowbar hit slips: durability spent, no stun. */
+    public static final float CROWBAR_SLIP_CHANCE = 0.20F;
+    /** After a slip the crowbar cooldown is this much shorter. */
+    public static final int SLIP_COOLDOWN_REDUCTION_TICKS = 5 * 20;
 
     public static boolean onAttackEntity(AttackEntityEvent event) {
         if (!(event.getEntity() instanceof ServerPlayer attacker) || !GameConfig.isRunning()) {
@@ -64,40 +72,60 @@ public final class GloveManager {
             return true;
         }
 
-        // Survivors can hit the maniac only with the crowbar, which stuns
-        // instead of damaging. Every other attack on the maniac is blocked.
+        // Survivors can hit the maniac only with the crowbar or the stun gun, which
+        // stun instead of damaging. Every other attack on the maniac is blocked.
         if (survivor && event.getTarget() instanceof ServerPlayer target
                 && target.getTags().contains("manik_killer")) {
-            ItemStack crowbar = attacker.getMainHandItem();
-            if (!crowbar.is(ManikItems.CROWBAR.get())) {
+            ItemStack weapon = attacker.getMainHandItem();
+            boolean crowbar = weapon.is(ManikItems.CROWBAR.get());
+            boolean stunGun = weapon.is(ManikItems.STUN_GUN.get());
+            if (!crowbar && !stunGun) {
                 attacker.displayClientMessage(
-                        Component.literal("Маніяка можна вдарити лише ломом."), true);
+                        Component.literal("Маніяка можна вдарити лише ломом або електрошокером."), true);
                 return true;
             }
 
-            if (attacker.getCooldowns().isOnCooldown(crowbar)) {
+            if (attacker.getCooldowns().isOnCooldown(weapon)) {
                 attacker.displayClientMessage(
-                        Component.literal("Лом перезаряджається."), true);
+                        Component.literal(crowbar ? "Лом перезаряджається." : "Електрошокер перезаряджається."), true);
                 return true;
             }
 
-            if (!StaminaManager.stunKiller(target, CROWBAR_STUN_TICKS)) {
+            if (StaminaManager.isStunned(target)) {
                 attacker.displayClientMessage(
                         Component.literal("Маніяк уже оглушений."), true);
                 return true;
             }
 
-            // Knock the stunned maniac away from the survivor.
-            target.knockback(1.6D, attacker.getX() - target.getX(), attacker.getZ() - target.getZ());
-            target.hurtMarked = true;
+            // The crowbar can slip: durability is spent, nobody is stunned, and the
+            // cooldown is 5 seconds shorter. The stun gun never slips.
+            if (crowbar && attacker.getRandom().nextFloat() < CROWBAR_SLIP_CHANCE) {
+                attacker.getCooldowns().addCooldown(weapon,
+                        Math.max(1, TrapManager.CROWBAR_COOLDOWN_TICKS - SLIP_COOLDOWN_REDUCTION_TICKS));
+                CrowbarItem.consumeUse(attacker, InteractionHand.MAIN_HAND, weapon);
+                attacker.connection.send(new ClientboundSetTitlesAnimationPacket(0, 20, 0));
+                attacker.connection.send(new ClientboundSetTitleTextPacket(
+                        Component.literal("Зіскочило!").withStyle(style -> style.withColor(0xFF8C1A))));
+                return true;
+            }
 
-            attacker.getCooldowns().addCooldown(crowbar, TrapManager.CROWBAR_COOLDOWN_TICKS);
-            CrowbarItem.consumeUse(attacker, InteractionHand.MAIN_HAND, crowbar);
+            int stunTicks = crowbar ? CROWBAR_STUN_TICKS : STUN_GUN_STUN_TICKS;
+            StaminaManager.stunKiller(target, stunTicks);
 
+            if (crowbar) {
+                // Knock the stunned maniac away from the survivor.
+                target.knockback(1.6D, attacker.getX() - target.getX(), attacker.getZ() - target.getZ());
+                target.hurtMarked = true;
+            }
+
+            attacker.getCooldowns().addCooldown(weapon, TrapManager.CROWBAR_COOLDOWN_TICKS);
+            CrowbarItem.consumeUse(attacker, InteractionHand.MAIN_HAND, weapon);
+
+            int seconds = stunTicks / 20;
             attacker.displayClientMessage(
-                    Component.literal("Маніяка оглушено на 3 секунди! Лом втратив одне використання."), true);
+                    Component.literal("Маніяка оглушено на " + seconds + " с! Предмет втратив одне використання."), true);
             target.displayClientMessage(
-                    Component.literal("Тебе оглушили ломом! Рух, стрибок і атаки заблоковані на 3 секунди."), true);
+                    Component.literal("Тебе оглушили! Рух, стрибок і атаки заблоковані на " + seconds + " с."), true);
             return true;
         }
 

@@ -121,6 +121,7 @@ public final class GameCommands {
         ACTIVE_ITEMS.clear();
         GloveManager.resetRound();
         TrapManager.beginRound(level);
+        TripwireManager.clearAll(source.getServer());
         List<BlockPos> generatorSpawns = SpawnPointManager.get(level, SpawnPointManager.Type.GENERATOR);
         Collections.shuffle(generatorSpawns);
         for (int i = 0; i < GameConfig.generators(); i++) {
@@ -144,9 +145,11 @@ public final class GameCommands {
         // Remaining item points receive only utility loot: 50% crowbar, 50% medkit. Traps are issued to killers.
         for (int i = canisterCount; i < itemSpawns.size(); i++) {
             BlockPos itemPos = itemSpawns.get(i);
-            int utilityRoll = java.util.concurrent.ThreadLocalRandom.current().nextInt(2);
-            net.minecraft.world.item.ItemStack stack = new net.minecraft.world.item.ItemStack(
-                    utilityRoll == 0 ? ManikItems.CROWBAR.get() : ManikItems.MEDKIT.get());
+            // 18% stun gun; the rest is split evenly between crowbar and medkit.
+            int utilityRoll = java.util.concurrent.ThreadLocalRandom.current().nextInt(100);
+            net.minecraft.world.item.Item utilityChoice = utilityRoll < 18 ? ManikItems.STUN_GUN.get()
+                    : (utilityRoll < 59 ? ManikItems.CROWBAR.get() : ManikItems.MEDKIT.get());
+            net.minecraft.world.item.ItemStack stack = new net.minecraft.world.item.ItemStack(utilityChoice);
             net.minecraft.world.entity.item.ItemEntity utilityItem = new net.minecraft.world.entity.item.ItemEntity(
                     level, itemPos.getX() + 0.5, itemPos.getY() + 0.05, itemPos.getZ() + 0.5, stack);
             utilityItem.setUnlimitedLifetime();
@@ -167,7 +170,8 @@ public final class GameCommands {
             // then give exactly one directly to each killer.
             for (int slot = 0; slot < player.getInventory().getContainerSize(); slot++) {
                 if (player.getInventory().getItem(slot).is(ManikBlocks.TRAP_ITEM.get())
-                        || player.getInventory().getItem(slot).is(ManikItems.MARK_GLOVE.get())) {
+                        || player.getInventory().getItem(slot).is(ManikItems.MARK_GLOVE.get())
+                        || player.getInventory().getItem(slot).is(ManikItems.TRIPWIRE.get())) {
                     player.getInventory().setItem(slot, net.minecraft.world.item.ItemStack.EMPTY);
                 }
             }
@@ -202,6 +206,22 @@ public final class GameCommands {
                 } else {
                     player.sendSystemMessage(Component.literal("Немає вільного місця для рукавиці! Звільни слот."));
                 }
+
+                int wireSlot = -1;
+                for (int slot = 0; slot < 36; slot++) {
+                    if (player.getInventory().getItem(slot).isEmpty()) {
+                        wireSlot = slot;
+                        break;
+                    }
+                }
+                if (wireSlot >= 0) {
+                    player.getInventory().setItem(wireSlot,
+                            new net.minecraft.world.item.ItemStack(ManikItems.TRIPWIRE.get()));
+                    player.sendSystemMessage(Component.literal(
+                            "Тобі видано розтяжку: ПКМ по одній поверхні, потім по іншій (до 5 блоків). Станить на 5 секунд."));
+                } else {
+                    player.sendSystemMessage(Component.literal("Немає вільного місця для розтяжки! Звільни слот."));
+                }
             }
             player.teleportTo(level, spawn.getX() + 0.5, spawn.getY(), spawn.getZ() + 0.5,
                     Set.of(), player.getYRot(), player.getXRot(), true);
@@ -232,6 +252,7 @@ public final class GameCommands {
         GameConfig.setRunning(false);
         GloveManager.resetRound();
         ExitManager.reset(server);
+        TripwireManager.clearAll(server);
         ServerLevel cleanupLevel = activeLevel;
         TrapManager.clearAll(cleanupLevel);
         if (cleanupLevel != null) {

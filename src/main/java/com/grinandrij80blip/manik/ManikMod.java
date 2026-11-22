@@ -42,6 +42,8 @@ public final class ManikMod {
                         output.accept(ManikBlocks.TRAP_ITEM.get());
                         output.accept(ManikItems.MEDKIT.get());
                         output.accept(ManikItems.CROWBAR.get());
+                        output.accept(ManikItems.STUN_GUN.get());
+                        output.accept(ManikItems.TRIPWIRE.get());
                         output.accept(ManikItems.MARK_GLOVE.get());
                     }).build());
 
@@ -74,6 +76,8 @@ public final class ManikMod {
         TickEvent.PlayerTickEvent.Post.BUS.addListener(ManiacBodyManager::onPlayerTick);
         TickEvent.PlayerTickEvent.Post.BUS.addListener(PowerManager::onPlayerTick);
         TickEvent.ServerTickEvent.Post.BUS.addListener(ExitManager::onServerTick);
+        TickEvent.ServerTickEvent.Post.BUS.addListener(TripwireManager::onServerTick);
+        net.minecraftforge.event.entity.living.LivingEvent.LivingJumpEvent.BUS.addListener(TripwireManager::onLivingJump);
         PlayerEvent.PlayerLoggedOutEvent.BUS.addListener(PowerManager::onLogout);
         net.minecraftforge.event.entity.living.LivingHurtEvent.BUS.addListener(
                 (java.util.function.Predicate<net.minecraftforge.event.entity.living.LivingHurtEvent>) PowerManager::onLivingHurt);

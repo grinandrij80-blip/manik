@@ -19,5 +19,7 @@
   "block.manik.exit_spawn": "Блок виходу",
   "item.manik.exit_spawn": "Блок виходу",
   "block.manik.round_lever": "Важіль виходу",
-  "item.manik.round_lever": "Важіль виходу"
+  "item.manik.round_lever": "Важіль виходу",
+  "item.manik.stun_gun": "Електрошокер",
+  "item.manik.tripwire": "Розтяжка"
 }

@@ -183,6 +183,13 @@ public final class TrapManager {
                     Set.of(), player.getYRot(), player.getXRot(), true);
         }
 
+        // Trapped survivors glow until they get out.
+        if (player.tickCount % 10 == 0
+                || !player.hasEffect(net.minecraft.world.effect.MobEffects.GLOWING)) {
+            player.addEffect(new net.minecraft.world.effect.MobEffectInstance(
+                    net.minecraft.world.effect.MobEffects.GLOWING, 40, 0, false, false, false));
+        }
+
         player.setDeltaMovement(0.0, 0.0, 0.0);
         player.setSprinting(false);
         player.setOnGround(true);
@@ -219,6 +226,7 @@ public final class TrapManager {
                 holdAtTrap(player, trappedAt);
             } else {
                 TRAPPED_PLAYERS.remove(playerId);
+                player.removeEffect(net.minecraft.world.effect.MobEffects.GLOWING);
             }
         }
 

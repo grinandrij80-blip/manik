@@ -26,5 +26,16 @@ public final class ManikItems {
                     .durability(3)
                     .stacksTo(1)));
 
+    public static final RegistryObject<Item> STUN_GUN = ITEMS.register("stun_gun",
+            () -> new Item(new Item.Properties()
+                    .setId(ITEMS.key("stun_gun"))
+                    .durability(2)
+                    .stacksTo(1)));
+
+    public static final RegistryObject<Item> TRIPWIRE = ITEMS.register("tripwire",
+            () -> new TripwireItem(new Item.Properties()
+                    .setId(ITEMS.key("tripwire"))
+                    .stacksTo(1)));
+
     private ManikItems() {}
 }

@@ -12,7 +12,8 @@ public final class PickupGuard {
         if (!GameConfig.isRunning() || !player.getTags().contains("manik_killer")) return false;
 
         ItemStack stack = event.getItem().getItem();
-        boolean ownRoleItem = stack.is(ManikItems.MARK_GLOVE.get()) || stack.is(ManikBlocks.TRAP_ITEM.get());
+        boolean ownRoleItem = stack.is(ManikItems.MARK_GLOVE.get()) || stack.is(ManikBlocks.TRAP_ITEM.get())
+                || stack.is(ManikItems.TRIPWIRE.get());
         return !ownRoleItem;
     }
 
