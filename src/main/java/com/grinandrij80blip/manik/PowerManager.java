@@ -15,13 +15,13 @@ import java.util.UUID;
  * Server side of the maniac super powers.
  * Power 1: Speed III + Jump Boost IV for 6 s (the maniac is nauseous meanwhile) and a
  *          jump scare for every survivor. Cooldown 60 s.
- * Power 2: every survivor glows and is blinded for 6 s. Cooldown 60 s.
+ * Power 2: every survivor glows and is blinded for 6 s. Cooldown 2 min.
  */
 public final class PowerManager {
     public static final int DURATION_TICKS = 6 * 20;
     public static final int COOLDOWN_TICKS = 60 * 20;
     public static final int DURATION2_TICKS = 6 * 20;
-    public static final int COOLDOWN2_TICKS = 60 * 20;
+    public static final int COOLDOWN2_TICKS = 120 * 20;
 
     private static final Map<UUID, Long> READY_AT = new HashMap<>();
     private static final Map<UUID, Long> READY_AT2 = new HashMap<>();
@@ -70,7 +70,7 @@ public final class PowerManager {
                     || !other.getTags().contains("manik_survivor")) continue;
             ManikNetwork.sendJumpscare(other);
             ManikNetwork.sendShake(other, 25);
-            Sfx.toPlayer(other, SoundEvents.GHAST_SCREAM, 1.0F, 0.6F);
+            Sfx.toPlayer(other, SoundEvents.GHAST_SCREAM, 1.0F, 0.5F);
             Sfx.toPlayer(other, SoundEvents.ENDERMAN_SCREAM, 1.0F, 0.5F);
         }
     }

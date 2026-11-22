@@ -37,5 +37,10 @@ public final class ManikItems {
                     .setId(ITEMS.key("tripwire"))
                     .stacksTo(1)));
 
+    public static final RegistryObject<Item> MACADAMIA = ITEMS.register("macadamia",
+            () -> new MacadamiaItem(new Item.Properties()
+                    .setId(ITEMS.key("macadamia"))
+                    .stacksTo(16)));
+
     private ManikItems() {}
 }

@@ -153,10 +153,11 @@ public final class GameCommands {
         // Remaining item points receive only utility loot: 50% crowbar, 50% medkit. Traps are issued to killers.
         for (int i = canisterCount; i < itemSpawns.size(); i++) {
             BlockPos itemPos = itemSpawns.get(i);
-            // 18% stun gun; the rest is split evenly between crowbar and medkit.
+            // 18% stun gun, 20% macadamia nut; the rest is split evenly between crowbar and medkit.
             int utilityRoll = java.util.concurrent.ThreadLocalRandom.current().nextInt(100);
             net.minecraft.world.item.Item utilityChoice = utilityRoll < 18 ? ManikItems.STUN_GUN.get()
-                    : (utilityRoll < 59 ? ManikItems.CROWBAR.get() : ManikItems.MEDKIT.get());
+                    : utilityRoll < 38 ? ManikItems.MACADAMIA.get()
+                    : (utilityRoll < 69 ? ManikItems.CROWBAR.get() : ManikItems.MEDKIT.get());
             net.minecraft.world.item.ItemStack stack = new net.minecraft.world.item.ItemStack(utilityChoice);
             net.minecraft.world.entity.item.ItemEntity utilityItem = new net.minecraft.world.entity.item.ItemEntity(
                     level, itemPos.getX() + 0.5, itemPos.getY() + 0.05, itemPos.getZ() + 0.5, stack);

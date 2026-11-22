@@ -40,7 +40,7 @@ public final class Sfx {
 
     /** Short, high-pitched pained groan of the maniac when he is hit. */
     public static void maniacHurt(Entity maniac) {
-        at(maniac, net.minecraft.sounds.SoundEvents.ZOMBIE_HURT, 1.0F, 1.7F);
+        at(maniac, net.minecraft.sounds.SoundEvents.ZOMBIE_HURT, 1.0F, 0.9F);
     }
 
     private Sfx() {}

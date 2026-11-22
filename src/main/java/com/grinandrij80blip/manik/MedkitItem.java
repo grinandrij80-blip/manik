@@ -38,6 +38,9 @@ public final class MedkitItem extends Item {
 
     @Override
     public void onUseTick(Level level, LivingEntity living, ItemStack stack, int remainingUseDuration) {
+        if (!level.isClientSide() && remainingUseDuration % 12 == 0) {
+            Sfx.at(living, net.minecraft.sounds.SoundEvents.ARMOR_EQUIP_LEATHER, 0.8F, 1.3F);
+        }
         if (!level.isClientSide() && level.getGameTime() % 5L == 0L) {
             living.addEffect(new MobEffectInstance(MobEffects.SLOWNESS, 8, 0, true, false, false));
         }
@@ -47,6 +50,8 @@ public final class MedkitItem extends Item {
     public ItemStack finishUsingItem(ItemStack stack, Level level, LivingEntity living) {
         if (!level.isClientSide() && living instanceof Player player) {
             player.heal(HEAL_AMOUNT);
+            Sfx.at(player, net.minecraft.sounds.SoundEvents.AMETHYST_BLOCK_CHIME, 1.0F, 1.0F);
+            Sfx.at(player, net.minecraft.sounds.SoundEvents.AMETHYST_BLOCK_CHIME, 0.8F, 1.5F);
             if (!player.getAbilities().instabuild) stack.shrink(1);
         }
         return stack;

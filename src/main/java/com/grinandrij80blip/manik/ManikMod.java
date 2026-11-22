@@ -41,6 +41,7 @@ public final class ManikMod {
                         output.accept(ManikBlocks.ROUND_LEVER_ITEM.get());
                         output.accept(ManikBlocks.TRAP_ITEM.get());
                         output.accept(ManikItems.MEDKIT.get());
+                        output.accept(ManikItems.MACADAMIA.get());
                         output.accept(ManikItems.CROWBAR.get());
                         output.accept(ManikItems.STUN_GUN.get());
                         output.accept(ManikItems.TRIPWIRE.get());
