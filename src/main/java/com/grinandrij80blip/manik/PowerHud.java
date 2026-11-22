@@ -50,21 +50,37 @@ public final class PowerHud {
         Minecraft minecraft = Minecraft.getInstance();
         if (!enabled || minecraft.player == null || minecraft.options.hideGui) return;
 
-        int size = 28;
-        int x = minecraft.getWindow().getGuiScaledWidth() - size - 8;
-        int y = minecraft.getWindow().getGuiScaledHeight() - size - 8;
+        final int radius = 20;       // half-diagonal of the diamond
+        final int innerRadius = 15;  // leaves a thick outline
+        int cx = minecraft.getWindow().getGuiScaledWidth() - radius - 10;
+        int cy = minecraft.getWindow().getGuiScaledHeight() - radius - 10;
 
         boolean ready = cooldownTicks <= 0;
         boolean active = activeTicks > 0;
-        int border = active ? 0xFFFFD83A : ready ? 0xFF36D45A : 0xFF7A7A7A;
+        // While recharging, the outline turns from black to white from top to bottom.
+        float progress = ready || active ? 1.0F
+                : 1.0F - cooldownTicks / (float) PowerManager.COOLDOWN_TICKS;
+        int whiteRows = Math.round(progress * (2 * radius + 1));
 
-        graphics.fill(x - 2, y - 2, x + size + 2, y + size + 2, border);
-        graphics.fill(x, y, x + size, y + size, 0xFF1C1C1C);
+        for (int dy = -radius; dy <= radius; dy++) {
+            int row = dy + radius;
+            int outer = radius - Math.abs(dy);
+            int inner = innerRadius - Math.abs(dy);
+            int color = row < whiteRows ? 0xFFFFFFFF : 0xFF000000;
+            int y = cy + dy;
+            if (inner < 0) {
+                graphics.fill(cx - outer, y, cx + outer + 1, y + 1, color);
+            } else {
+                graphics.fill(cx - outer, y, cx - inner, y + 1, color);
+                graphics.fill(cx + inner + 1, y, cx + outer + 1, y + 1, color);
+                graphics.fill(cx - inner, y, cx + inner + 1, y + 1, 0xFF1C1C1C);
+            }
+        }
 
         // Lightning bolt icon, drawn from rectangles so no texture file is needed.
         int bolt = ready || active ? 0xFFFFD83A : 0xFF555555;
-        int bx = x + 8;
-        int by = y + 3;
+        int bx = cx - 6;
+        int by = cy - 10;
         graphics.fill(bx + 7, by, bx + 12, by + 3, bolt);
         graphics.fill(bx + 5, by + 3, bx + 10, by + 6, bolt);
         graphics.fill(bx + 3, by + 6, bx + 8, by + 9, bolt);
@@ -72,20 +88,6 @@ public final class PowerHud {
         graphics.fill(bx + 5, by + 12, bx + 10, by + 15, bolt);
         graphics.fill(bx + 3, by + 15, bx + 8, by + 18, bolt);
         graphics.fill(bx + 1, by + 18, bx + 6, by + 21, bolt);
-
-        if (!ready) {
-            // Dark overlay shrinks from top to bottom as the cooldown runs out.
-            int total = PowerManager.COOLDOWN_TICKS;
-            int covered = Math.round(size * (cooldownTicks / (float) total));
-            graphics.fill(x, y, x + size, y + covered, 0x99000000);
-            String seconds = String.valueOf((cooldownTicks + 19) / 20);
-            int w = minecraft.font.width(seconds);
-            graphics.drawString(minecraft.font, seconds, x + (size - w) / 2, y + (size - 8) / 2, 0xFFFFFFFF);
-        } else if (KEY != null) {
-            String label = KEY.getTranslatedKeyMessage().getString();
-            int w = minecraft.font.width(label);
-            graphics.drawString(minecraft.font, label, x + (size - w) / 2, y + size - 9, 0xFF36D45A);
-        }
     }
 
     private PowerHud() {}
