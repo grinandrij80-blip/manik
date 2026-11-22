@@ -32,6 +32,7 @@ public final class PowerManager {
         if (!isManiac(player) || StaminaManager.isStunned(player) || cooldownLeft(player) > 0) return;
         READY_AT.put(player.getUUID(), player.level().getGameTime() + COOLDOWN_TICKS);
         player.addEffect(new MobEffectInstance(MobEffects.SPEED, DURATION_TICKS, 2, false, false, true));
+        player.addEffect(new MobEffectInstance(MobEffects.JUMP_BOOST, DURATION_TICKS, 3, false, false, true));
         ManikNetwork.sendPower(player, COOLDOWN_TICKS, DURATION_TICKS, true);
     }
 
@@ -55,6 +56,17 @@ public final class PowerManager {
             int active = speed != null && speed.getAmplifier() == 2 ? Math.min(speed.getDuration(), DURATION_TICKS) : 0;
             ManikNetwork.sendPower(player, cooldownLeft(player), active, true);
         }
+    }
+
+    /** Maniacs take no fire, lava, drowning or fall damage during a round. Returns true to cancel. */
+    public static boolean onLivingHurt(net.minecraftforge.event.entity.living.LivingHurtEvent event) {
+        if (!(event.getEntity() instanceof ServerPlayer player) || !isManiac(player)) return false;
+        var source = event.getSource();
+        boolean immune = source.is(net.minecraft.tags.DamageTypeTags.IS_FIRE)
+                || source.is(net.minecraft.tags.DamageTypeTags.IS_FALL)
+                || source.is(net.minecraft.tags.DamageTypeTags.IS_DROWNING);
+        if (immune) player.clearFire();
+        return immune;
     }
 
     public static void onLogout(PlayerEvent.PlayerLoggedOutEvent event) {

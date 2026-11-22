@@ -6,10 +6,6 @@ import net.minecraft.world.InteractionHand;
 import net.minecraft.world.item.ItemStack;
 import net.minecraftforge.event.entity.player.AttackEntityEvent;
 
-import java.util.HashMap;
-import java.util.Map;
-import java.util.UUID;
-
 /**
  * Server-authoritative MANIK role attack restrictions and glove hits.
  * A survivor holding the crowbar can hit the maniac to stun them for a few
@@ -21,7 +17,6 @@ public final class GloveManager {
     public static final float HIT_DAMAGE = 4.0F;
     /** How long a crowbar hit stuns the maniac. */
     public static final int CROWBAR_STUN_TICKS = 3 * 20;
-    private static final Map<UUID, Integer> GLOVE_HITS_RECEIVED = new HashMap<>();
 
     public static boolean onAttackEntity(AttackEntityEvent event) {
         if (!(event.getEntity() instanceof ServerPlayer attacker) || !GameConfig.isRunning()) {
@@ -58,31 +53,14 @@ public final class GloveManager {
                 return true;
             }
 
-            int hits = GLOVE_HITS_RECEIVED.getOrDefault(target.getUUID(), 0) + 1;
-            GLOVE_HITS_RECEIVED.put(target.getUUID(), hits);
-
-            if (hits >= 3) {
-                // The third successful glove hit eliminates the survivor even
-                // if armor or other mitigation reduced the first two hits.
-                target.hurt(attacker.damageSources().genericKill(), Float.MAX_VALUE);
-            } else {
-                target.hurt(attacker.damageSources().generic(), HIT_DAMAGE);
-            }
+            // Every successful glove hit deals fixed damage; there is no guaranteed kill.
+            target.hurt(attacker.damageSources().generic(), HIT_DAMAGE);
 
             attacker.getCooldowns().addCooldown(glove, COOLDOWN_TICKS);
             attacker.displayClientMessage(
-                    Component.literal("Рукавицю використано. Удари по цілі: "
-                            + Math.min(hits, 3) + "/3. Перезарядка: 12 секунд."), true);
-
-            if (hits >= 3) {
-                GLOVE_HITS_RECEIVED.remove(target.getUUID());
-                target.displayClientMessage(
-                        Component.literal("Ти вибув із раунду після третього влучання рукавицею."), true);
-            } else {
-                target.displayClientMessage(
-                        Component.literal("Влучання рукавицею: " + hits
-                                + "/3 (-4 HP). Третє влучання вибуває з раунду."), true);
-            }
+                    Component.literal("Рукавицю використано. Перезарядка: 12 секунд."), true);
+            target.displayClientMessage(
+                    Component.literal("Влучання рукавицею: -4 HP."), true);
             return true;
         }
 
@@ -109,6 +87,10 @@ public final class GloveManager {
                 return true;
             }
 
+            // Knock the stunned maniac away from the survivor.
+            target.knockback(1.6D, attacker.getX() - target.getX(), attacker.getZ() - target.getZ());
+            target.hurtMarked = true;
+
             attacker.getCooldowns().addCooldown(crowbar, TrapManager.CROWBAR_COOLDOWN_TICKS);
             CrowbarItem.consumeUse(attacker, InteractionHand.MAIN_HAND, crowbar);
 
@@ -123,11 +105,9 @@ public final class GloveManager {
     }
 
     public static void resetRound() {
-        GLOVE_HITS_RECEIVED.clear();
     }
 
     public static void onLogout(net.minecraftforge.event.entity.player.PlayerEvent.PlayerLoggedOutEvent event) {
-        GLOVE_HITS_RECEIVED.remove(event.getEntity().getUUID());
     }
 
     private GloveManager() {}

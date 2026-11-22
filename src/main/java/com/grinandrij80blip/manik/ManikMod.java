@@ -71,6 +71,8 @@ public final class ManikMod {
         TickEvent.PlayerTickEvent.Post.BUS.addListener(ManiacBodyManager::onPlayerTick);
         TickEvent.PlayerTickEvent.Post.BUS.addListener(PowerManager::onPlayerTick);
         PlayerEvent.PlayerLoggedOutEvent.BUS.addListener(PowerManager::onLogout);
+        net.minecraftforge.event.entity.living.LivingHurtEvent.BUS.addListener(
+                (java.util.function.Predicate<net.minecraftforge.event.entity.living.LivingHurtEvent>) PowerManager::onLivingHurt);
         net.minecraftforge.event.entity.EntityAttributeCreationEvent.BUS.addListener(ManikEntities::onAttributes);
         net.minecraftforge.event.entity.living.LivingEvent.LivingJumpEvent.BUS.addListener(StaminaManager::onLivingJump);
         PlayerEvent.PlayerLoggedOutEvent.BUS.addListener(GeneratorManager::onPlayerLogout);
