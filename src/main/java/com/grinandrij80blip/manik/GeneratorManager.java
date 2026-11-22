@@ -113,9 +113,9 @@ public final class GeneratorManager {
                     if (generator.strengthTicks >= 20) {
                         generator.strength = Math.min(100.0, generator.strength + 1.0);
                         generator.strengthTicks = 0;
-                        if (GameCommands.areAllGeneratorsReady(level)) {
+                        if (GameCommands.areAllGeneratorsReady(level) && GameCommands.markReadyAnnounced()) {
                             level.getServer().getPlayerList().broadcastSystemMessage(
-                                    Component.literal("MANIK: усі генератори готові! Двері виходу відчиняються."), false);
+                                    Component.literal("MANIK: потрібні генератори готові! Двері виходу відчиняються."), false);
                         }
                     }
                 }

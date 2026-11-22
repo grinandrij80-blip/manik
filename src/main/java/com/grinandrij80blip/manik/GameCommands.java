@@ -19,12 +19,23 @@ public final class GameCommands {
     private static final List<BlockPos> ACTIVE_GENERATORS = new ArrayList<>();
     private static final List<UUID> ACTIVE_ITEMS = new ArrayList<>();
 
+    private static boolean readyAnnounced;
+
+    /** The exit opens once the required number of generators is ready; the spare one is not needed. */
     public static boolean areAllGeneratorsReady(ServerLevel level) {
         if (!GameConfig.isRunning() || activeLevel != level || ACTIVE_GENERATORS.isEmpty()) return false;
+        int ready = 0;
         for (BlockPos pos : ACTIVE_GENERATORS) {
-            if (!level.getBlockState(pos).is(ManikBlocks.GENERATOR.get())
-                    || !GeneratorManager.isGeneratorReady(level, pos)) return false;
+            if (level.getBlockState(pos).is(ManikBlocks.GENERATOR.get())
+                    && GeneratorManager.isGeneratorReady(level, pos)) ready++;
         }
+        return ready >= GameConfig.generators();
+    }
+
+    /** True only the first time it is called in a round (to announce the exit opening once). */
+    public static boolean markReadyAnnounced() {
+        if (readyAnnounced) return false;
+        readyAnnounced = true;
         return true;
     }
 
@@ -102,9 +113,11 @@ public final class GameCommands {
             return 0;
         }
         int availableGenerators = SpawnPointManager.get(level, SpawnPointManager.Type.GENERATOR).size();
-        if (availableGenerators < GameConfig.generators()) {
+        // One spare generator is always placed, so nobody can camp the last one.
+        int generatorCount = GameConfig.generators() + 1;
+        if (availableGenerators < generatorCount) {
             source.sendFailure(Component.literal("Недостатньо синіх точок появи генераторів: потрібно ще "
-                    + (GameConfig.generators() - availableGenerators) + "."));
+                    + (generatorCount - availableGenerators) + " (потрібно на 1 більше, ніж у налаштуванні: один запасний)."));
             return 0;
         }
         if (killerSpawns.size() < killers) {
@@ -132,7 +145,8 @@ public final class GameCommands {
         TripwireManager.clearAll(source.getServer());
         List<BlockPos> generatorSpawns = SpawnPointManager.get(level, SpawnPointManager.Type.GENERATOR);
         Collections.shuffle(generatorSpawns);
-        for (int i = 0; i < GameConfig.generators(); i++) {
+        readyAnnounced = false;
+        for (int i = 0; i < generatorCount; i++) {
             BlockPos generatorPos = generatorSpawns.get(i);
             level.setBlockAndUpdate(generatorPos, ManikBlocks.GENERATOR.get().defaultBlockState());
             ACTIVE_GENERATORS.add(generatorPos.immutable());
@@ -294,7 +308,7 @@ public final class GameCommands {
         String state = GameConfig.isRunning() ? "запущена" : "зупинена";
         source.sendSuccess(() -> Component.literal("MANIK: " + state
                 + " | маніяків: " + GameConfig.killers()
-                + " | генераторів: " + GameConfig.generators()), false);
+                + " | генераторів для виходу: " + GameConfig.generators() + " (+1 запасний)"), false);
         return 1;
     }
 
