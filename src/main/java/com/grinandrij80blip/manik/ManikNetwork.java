@@ -14,11 +14,12 @@ public final class ManikNetwork {
                                      boolean active, boolean canSprint) {}
 
     private record ExitSyncPacket(int phase, int ticksLeft) {}
+    private record ShakePacket(int ticks) {}
     private record PowerRequestPacket() {}
     private record PowerSyncPacket(int cooldownTicks, int activeTicks, boolean enabled) {}
 
     private static final SimpleChannel CHANNEL =
-            ChannelBuilder.named("manik:main").networkProtocolVersion(6).simpleChannel();
+            ChannelBuilder.named("manik:main").networkProtocolVersion(7).simpleChannel();
 
     private static final StreamCodec<RegistryFriendlyByteBuf, UseInputPacket> USE_INPUT_CODEC =
             StreamCodec.of(
@@ -62,6 +63,12 @@ public final class ManikNetwork {
                     buffer -> new ExitSyncPacket(buffer.readVarInt(), buffer.readVarInt())
             );
 
+    private static final StreamCodec<RegistryFriendlyByteBuf, ShakePacket> SHAKE_CODEC =
+            StreamCodec.of(
+                    (buffer, packet) -> buffer.writeVarInt(packet.ticks()),
+                    buffer -> new ShakePacket(buffer.readVarInt())
+            );
+
     public static void register() {
         CHANNEL.play().flow(PacketFlow.SERVERBOUND)
                 .addMain(UseInputPacket.class, USE_INPUT_CODEC, (packet, context) -> {
@@ -80,6 +87,8 @@ public final class ManikNetwork {
                                 packet.jumpBlockedTicks(), packet.active(), packet.canSprint()))
                 .addMain(ExitSyncPacket.class, EXIT_SYNC_CODEC,
                         (packet, context) -> ExitHud.update(packet.phase(), packet.ticksLeft()))
+                .addMain(ShakePacket.class, SHAKE_CODEC,
+                        (packet, context) -> ShakeClient.start(packet.ticks()))
                 .addMain(PowerSyncPacket.class, POWER_SYNC_CODEC,
                         (packet, context) -> PowerHud.update(
                                 packet.cooldownTicks(), packet.activeTicks(), packet.enabled()))
@@ -92,6 +101,10 @@ public final class ManikNetwork {
 
     public static void sendExit(ServerPlayer player, int phase, int ticksLeft) {
         CHANNEL.send(new ExitSyncPacket(phase, ticksLeft), PacketDistributor.PLAYER.with(player));
+    }
+
+    public static void sendShake(ServerPlayer player, int ticks) {
+        CHANNEL.send(new ShakePacket(ticks), PacketDistributor.PLAYER.with(player));
     }
 
     public static void sendPowerRequest() {

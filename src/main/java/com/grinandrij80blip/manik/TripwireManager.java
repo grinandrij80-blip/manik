@@ -161,6 +161,7 @@ public final class TripwireManager {
     private static void stun(ServerPlayer player, long now) {
         STUNNED_UNTIL.put(player.getUUID(), player.level().getGameTime() + STUN_TICKS);
         player.setSprinting(false);
+        ShockManager.start(player, STUN_TICKS);
         player.addEffect(new MobEffectInstance(MobEffects.SLOWNESS, STUN_TICKS, 255, false, false, true));
         player.addEffect(new MobEffectInstance(MobEffects.GLOWING, STUN_TICKS, 0, false, false, false));
         player.displayClientMessage(Component.literal("Ти потрапив на розтяжку! Оглушено на 5 секунд."), true);

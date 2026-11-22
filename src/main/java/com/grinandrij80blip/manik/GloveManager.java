@@ -112,6 +112,10 @@ public final class GloveManager {
             int stunTicks = crowbar ? CROWBAR_STUN_TICKS : STUN_GUN_STUN_TICKS;
             StaminaManager.stunKiller(target, stunTicks);
 
+            if (stunGun) {
+                ShockManager.start(target, stunTicks);
+            }
+
             if (crowbar) {
                 // Knock the stunned maniac away from the survivor.
                 target.knockback(1.6D, attacker.getX() - target.getX(), attacker.getZ() - target.getZ());

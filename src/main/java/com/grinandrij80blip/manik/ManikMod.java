@@ -55,6 +55,7 @@ public final class ManikMod {
             ManiacClient.register();
             PowerHud.register();
             ExitHud.register();
+            ShakeClient.register();
         }
         RegisterCommandsEvent.BUS.addListener(GameCommands::onRegisterCommands);
         BlockEvent.EntityPlaceEvent.BUS.addListener(SpawnPointManager::onBlockPlace);
@@ -77,6 +78,7 @@ public final class ManikMod {
         TickEvent.PlayerTickEvent.Post.BUS.addListener(PowerManager::onPlayerTick);
         TickEvent.ServerTickEvent.Post.BUS.addListener(ExitManager::onServerTick);
         TickEvent.ServerTickEvent.Post.BUS.addListener(TripwireManager::onServerTick);
+        TickEvent.ServerTickEvent.Post.BUS.addListener(ShockManager::onServerTick);
         net.minecraftforge.event.entity.living.LivingEvent.LivingJumpEvent.BUS.addListener(TripwireManager::onLivingJump);
         PlayerEvent.PlayerLoggedOutEvent.BUS.addListener(PowerManager::onLogout);
         net.minecraftforge.event.entity.living.LivingHurtEvent.BUS.addListener(

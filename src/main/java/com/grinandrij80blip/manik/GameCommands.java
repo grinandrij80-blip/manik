@@ -253,6 +253,7 @@ public final class GameCommands {
         GloveManager.resetRound();
         ExitManager.reset(server);
         TripwireManager.clearAll(server);
+        ShockManager.clearAll();
         ServerLevel cleanupLevel = activeLevel;
         TrapManager.clearAll(cleanupLevel);
         if (cleanupLevel != null) {
