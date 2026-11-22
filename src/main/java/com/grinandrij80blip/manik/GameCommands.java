@@ -135,7 +135,7 @@ public final class GameCommands {
         for (int i = 0; i < canisterCount; i++) {
             BlockPos itemPos = itemSpawns.get(i);
             net.minecraft.world.entity.item.ItemEntity canister = new net.minecraft.world.entity.item.ItemEntity(
-                    level, itemPos.getX() + 0.5, itemPos.getY() + 1.02, itemPos.getZ() + 0.5,
+                    level, itemPos.getX() + 0.5, itemPos.getY() + 0.05, itemPos.getZ() + 0.5,
                     new net.minecraft.world.item.ItemStack(ManikItems.CANISTER.get()));
             if (level.addFreshEntity(canister)) ACTIVE_ITEMS.add(canister.getUUID());
         }
@@ -147,13 +147,15 @@ public final class GameCommands {
             net.minecraft.world.item.ItemStack stack = new net.minecraft.world.item.ItemStack(
                     utilityRoll == 0 ? ManikItems.CROWBAR.get() : ManikItems.MEDKIT.get());
             net.minecraft.world.entity.item.ItemEntity utilityItem = new net.minecraft.world.entity.item.ItemEntity(
-                    level, itemPos.getX() + 0.5, itemPos.getY() + 1.02, itemPos.getZ() + 0.5, stack);
+                    level, itemPos.getX() + 0.5, itemPos.getY() + 0.05, itemPos.getZ() + 0.5, stack);
             if (level.addFreshEntity(utilityItem)) ACTIVE_ITEMS.add(utilityItem.getUUID());
         }
 
+        List<UUID> survivorIds = new ArrayList<>();
         for (int i = 0; i < shuffledPlayers.size(); i++) {
             ServerPlayer player = shuffledPlayers.get(i);
             boolean killer = i < killers;
+            if (!killer) survivorIds.add(player.getUUID());
             BlockPos spawn = killer ? killerSpawns.get(i) : survivorSpawns.get(i - killers);
             player.removeTag("manik_killer");
             player.removeTag("manik_survivor");
@@ -199,12 +201,13 @@ public final class GameCommands {
                     player.sendSystemMessage(Component.literal("Немає вільного місця для рукавиці! Звільни слот."));
                 }
             }
-            player.teleportTo(level, spawn.getX() + 0.5, spawn.getY() + 1.0, spawn.getZ() + 0.5,
+            player.teleportTo(level, spawn.getX() + 0.5, spawn.getY(), spawn.getZ() + 0.5,
                     Set.of(), player.getYRot(), player.getXRot(), true);
             player.sendSystemMessage(Component.literal(killer ? "Твоя роль: МАНІЯК" : "Твоя роль: ВИЖИВШИЙ"));
             StaminaManager.beginRound(player);
         }
 
+        ExitManager.beginRound(level, survivorIds);
         GameConfig.setRunning(true);
         source.getServer().getPlayerList().broadcastSystemMessage(
                 Component.literal("MANIK: гру розпочато! Маніяків: " + killers
@@ -217,8 +220,16 @@ public final class GameCommands {
             source.sendFailure(Component.literal("Гра MANIK зараз не запущена."));
             return 0;
         }
+        endRound(source.getServer(),
+                "MANIK: гру зупинено. Генератори й ігрові предмети прибрано, точки спавну збережено, ролі скинуто.");
+        return 1;
+    }
+
+    /** Ends the running round (command or escape finish): cleans the map and resets roles. */
+    public static void endRound(net.minecraft.server.MinecraftServer server, String message) {
         GameConfig.setRunning(false);
         GloveManager.resetRound();
+        ExitManager.reset(server);
         ServerLevel cleanupLevel = activeLevel;
         TrapManager.clearAll(cleanupLevel);
         if (cleanupLevel != null) {
@@ -237,15 +248,12 @@ public final class GameCommands {
         ACTIVE_GENERATORS.clear();
         activeLevel = null;
         GeneratorManager.clearAllSessions();
-        StaminaManager.endRound(source.getServer().getPlayerList().getPlayers());
-        for (ServerPlayer player : source.getServer().getPlayerList().getPlayers()) {
+        StaminaManager.endRound(server.getPlayerList().getPlayers());
+        for (ServerPlayer player : server.getPlayerList().getPlayers()) {
             player.removeTag("manik_killer");
             player.removeTag("manik_survivor");
         }
-        source.getServer().getPlayerList().broadcastSystemMessage(
-                Component.literal("MANIK: гру зупинено. Генератори й ігрові предмети прибрано, точки спавну збережено, ролі скинуто."),
-                false);
-        return 1;
+        server.getPlayerList().broadcastSystemMessage(Component.literal(message), false);
     }
 
     private static int status(CommandSourceStack source) {

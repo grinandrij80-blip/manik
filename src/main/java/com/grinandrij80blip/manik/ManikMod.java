@@ -37,6 +37,8 @@ public final class ManikMod {
                         output.accept(ManikBlocks.SURVIVOR_SPAWN_ITEM.get());
                         output.accept(ManikBlocks.KILLER_SPAWN_ITEM.get());
                         output.accept(ManikBlocks.EXIT_DOOR_ITEM.get());
+                        output.accept(ManikBlocks.EXIT_SPAWN_ITEM.get());
+                        output.accept(ManikBlocks.ROUND_LEVER_ITEM.get());
                         output.accept(ManikBlocks.TRAP_ITEM.get());
                         output.accept(ManikItems.MEDKIT.get());
                         output.accept(ManikItems.CROWBAR.get());
@@ -50,6 +52,7 @@ public final class ManikMod {
             StaminaHud.register();
             ManiacClient.register();
             PowerHud.register();
+            ExitHud.register();
         }
         RegisterCommandsEvent.BUS.addListener(GameCommands::onRegisterCommands);
         BlockEvent.EntityPlaceEvent.BUS.addListener(SpawnPointManager::onBlockPlace);
@@ -70,6 +73,7 @@ public final class ManikMod {
         TickEvent.PlayerTickEvent.Post.BUS.addListener(StaminaManager::onPlayerTick);
         TickEvent.PlayerTickEvent.Post.BUS.addListener(ManiacBodyManager::onPlayerTick);
         TickEvent.PlayerTickEvent.Post.BUS.addListener(PowerManager::onPlayerTick);
+        TickEvent.ServerTickEvent.Post.BUS.addListener(ExitManager::onServerTick);
         PlayerEvent.PlayerLoggedOutEvent.BUS.addListener(PowerManager::onLogout);
         net.minecraftforge.event.entity.living.LivingHurtEvent.BUS.addListener(
                 (java.util.function.Predicate<net.minecraftforge.event.entity.living.LivingHurtEvent>) PowerManager::onLivingHurt);

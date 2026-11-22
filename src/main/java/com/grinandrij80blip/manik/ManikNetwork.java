@@ -13,11 +13,12 @@ public final class ManikNetwork {
     private record StaminaSyncPacket(int stamina, int exhaustionTicks, int jumpBlockedTicks,
                                      boolean active, boolean canSprint) {}
 
+    private record ExitSyncPacket(int phase, int ticksLeft) {}
     private record PowerRequestPacket() {}
     private record PowerSyncPacket(int cooldownTicks, int activeTicks, boolean enabled) {}
 
     private static final SimpleChannel CHANNEL =
-            ChannelBuilder.named("manik:main").networkProtocolVersion(5).simpleChannel();
+            ChannelBuilder.named("manik:main").networkProtocolVersion(6).simpleChannel();
 
     private static final StreamCodec<RegistryFriendlyByteBuf, UseInputPacket> USE_INPUT_CODEC =
             StreamCodec.of(
@@ -52,6 +53,15 @@ public final class ManikNetwork {
                     buffer -> new PowerSyncPacket(buffer.readVarInt(), buffer.readVarInt(), buffer.readBoolean())
             );
 
+    private static final StreamCodec<RegistryFriendlyByteBuf, ExitSyncPacket> EXIT_SYNC_CODEC =
+            StreamCodec.of(
+                    (buffer, packet) -> {
+                        buffer.writeVarInt(packet.phase());
+                        buffer.writeVarInt(packet.ticksLeft());
+                    },
+                    buffer -> new ExitSyncPacket(buffer.readVarInt(), buffer.readVarInt())
+            );
+
     public static void register() {
         CHANNEL.play().flow(PacketFlow.SERVERBOUND)
                 .addMain(UseInputPacket.class, USE_INPUT_CODEC, (packet, context) -> {
@@ -68,6 +78,8 @@ public final class ManikNetwork {
                         (packet, context) -> StaminaHud.update(
                                 packet.stamina(), packet.exhaustionTicks(),
                                 packet.jumpBlockedTicks(), packet.active(), packet.canSprint()))
+                .addMain(ExitSyncPacket.class, EXIT_SYNC_CODEC,
+                        (packet, context) -> ExitHud.update(packet.phase(), packet.ticksLeft()))
                 .addMain(PowerSyncPacket.class, POWER_SYNC_CODEC,
                         (packet, context) -> PowerHud.update(
                                 packet.cooldownTicks(), packet.activeTicks(), packet.enabled()))
@@ -76,6 +88,10 @@ public final class ManikNetwork {
 
     public static void sendUseInput(boolean held) {
         CHANNEL.send(new UseInputPacket(held), PacketDistributor.SERVER.noArg());
+    }
+
+    public static void sendExit(ServerPlayer player, int phase, int ticksLeft) {
+        CHANNEL.send(new ExitSyncPacket(phase, ticksLeft), PacketDistributor.PLAYER.with(player));
     }
 
     public static void sendPowerRequest() {

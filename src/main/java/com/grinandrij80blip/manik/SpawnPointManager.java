@@ -30,7 +30,8 @@ public final class SpawnPointManager {
         ITEM,
         GENERATOR,
         SURVIVOR,
-        KILLER
+        KILLER,
+        EXIT
     }
 
     private static final String DATA_ID = "manik_spawn_points";
@@ -45,7 +46,9 @@ public final class SpawnPointManager {
                     POSITIONS_CODEC.optionalFieldOf("survivor", List.of())
                             .forGetter(data -> data.toLongList(Type.SURVIVOR)),
                     POSITIONS_CODEC.optionalFieldOf("killer", List.of())
-                            .forGetter(data -> data.toLongList(Type.KILLER))
+                            .forGetter(data -> data.toLongList(Type.KILLER)),
+                    POSITIONS_CODEC.optionalFieldOf("exit", List.of())
+                            .forGetter(data -> data.toLongList(Type.EXIT))
             ).apply(instance, SpawnPointData::new)
     );
 
@@ -65,13 +68,15 @@ public final class SpawnPointManager {
                 List<Long> item,
                 List<Long> generator,
                 List<Long> survivor,
-                List<Long> killer
+                List<Long> killer,
+                List<Long> exit
         ) {
             this();
             loadPositions(Type.ITEM, item);
             loadPositions(Type.GENERATOR, generator);
             loadPositions(Type.SURVIVOR, survivor);
             loadPositions(Type.KILLER, killer);
+            loadPositions(Type.EXIT, exit);
         }
 
         private void loadPositions(Type type, List<Long> packedPositions) {
@@ -182,6 +187,9 @@ public final class SpawnPointManager {
         }
         if (block == ManikBlocks.KILLER_SPAWN.get()) {
             return Type.KILLER;
+        }
+        if (block == ManikBlocks.EXIT_SPAWN.get()) {
+            return Type.EXIT;
         }
         return null;
     }

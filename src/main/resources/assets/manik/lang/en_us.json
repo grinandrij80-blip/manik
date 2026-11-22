@@ -15,5 +15,9 @@
   "item.manik.crowbar": "Crowbar",
   "block.manik.trap": "Trap",
   "item.manik.trap": "Trap",
-  "entity.manik.maniac_body": "Maniac"
+  "entity.manik.maniac_body": "Maniac",
+  "block.manik.exit_spawn": "Exit block",
+  "item.manik.exit_spawn": "Exit block",
+  "block.manik.round_lever": "Exit lever",
+  "item.manik.round_lever": "Exit lever"
 }

@@ -15,5 +15,9 @@
   "item.manik.crowbar": "Лом",
   "block.manik.trap": "Капкан",
   "item.manik.trap": "Капкан",
-  "entity.manik.maniac_body": "Маніяк"
+  "entity.manik.maniac_body": "Маніяк",
+  "block.manik.exit_spawn": "Блок виходу",
+  "item.manik.exit_spawn": "Блок виходу",
+  "block.manik.round_lever": "Важіль виходу",
+  "item.manik.round_lever": "Важіль виходу"
 }
