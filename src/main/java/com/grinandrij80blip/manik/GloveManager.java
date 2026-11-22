@@ -13,8 +13,8 @@ import net.minecraftforge.event.entity.player.AttackEntityEvent;
  */
 public final class GloveManager {
     public static final int COOLDOWN_TICKS = 12 * 20;
-    /** Fixed glove damage in health points (4 HP = 2 hearts). */
-    public static final float HIT_DAMAGE = 4.0F;
+    /** Fixed glove damage in health points (8 HP = 4 hearts). */
+    public static final float HIT_DAMAGE = 8.0F;
     /** How long a crowbar hit stuns the maniac. */
     public static final int CROWBAR_STUN_TICKS = 3 * 20;
 
@@ -60,7 +60,7 @@ public final class GloveManager {
             attacker.displayClientMessage(
                     Component.literal("Рукавицю використано. Перезарядка: 12 секунд."), true);
             target.displayClientMessage(
-                    Component.literal("Влучання рукавицею: -4 HP."), true);
+                    Component.literal("Влучання рукавицею: -8 HP."), true);
             return true;
         }
 

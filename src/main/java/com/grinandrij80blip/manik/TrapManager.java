@@ -25,8 +25,8 @@ import java.util.UUID;
 public final class TrapManager {
     public static final int TRAP_COOLDOWN_TICKS = 55 * 20;
     public static final int CROWBAR_COOLDOWN_TICKS = 7 * 20;
-    /** Fixed trap damage in health points (4 HP = 2 hearts). */
-    public static final float TRAP_DAMAGE = 4.0F;
+    /** Fixed trap damage in health points (8 HP = 4 hearts). */
+    public static final float TRAP_DAMAGE = 8.0F;
     private static final Set<BlockPos> ACTIVE_TRAPS = new HashSet<>();
     private static final Map<UUID, BlockPos> TRAPPED_PLAYERS = new HashMap<>();
     private static ServerLevel activeLevel;
@@ -230,7 +230,7 @@ public final class TrapManager {
             TRAPPED_PLAYERS.put(player.getUUID(), immutablePos);
             holdAtTrap(player, immutablePos);
             player.displayClientMessage(
-                    Component.literal("Ти потрапив у капкан! Втрачено 4 HP (2 серця). Не можеш вибратися, доки капкан не знешкодять."),
+                    Component.literal("Ти потрапив у капкан! Втрачено 8 HP (4 серця). Не можеш вибратися, доки капкан не знешкодять."),
                     true);
         }
     }

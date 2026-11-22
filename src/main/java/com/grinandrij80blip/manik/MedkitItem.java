@@ -13,8 +13,8 @@ import net.minecraft.world.level.Level;
 
 public final class MedkitItem extends Item {
     public static final int USE_TICKS = 60;
-    /** Fixed healing in health points (4 HP = 2 hearts). */
-    public static final float HEAL_AMOUNT = 4.0F;
+    /** Fixed healing in health points (8 HP = 4 hearts). */
+    public static final float HEAL_AMOUNT = 8.0F;
 
     public MedkitItem(Properties properties) {
         super(properties);
