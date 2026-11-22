@@ -55,7 +55,8 @@ public final class ManikTrapBlock extends Block {
     @Override
     protected VoxelShape getCollisionShape(BlockState state, BlockGetter level, BlockPos pos,
                                            CollisionContext context) {
-        return COLLISION_SHAPE;
+        // No collision: a caught survivor stands inside the trap, not on top of it.
+        return Shapes.empty();
     }
 
     @Override

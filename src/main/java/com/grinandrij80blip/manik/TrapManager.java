@@ -118,6 +118,31 @@ public final class TrapManager {
         player.displayClientMessage(Component.literal("Капкан знешкоджено. Спійманого гравця звільнено. Перезарядка лома: 7 секунд."), true);
     }
 
+    /**
+     * A trapped survivor frees themselves by using the crowbar (right click anywhere).
+     * Same price as disarming: the trap is removed, 7 s crowbar cooldown, one use spent.
+     * Returns true when the survivor was trapped and has been freed.
+     */
+    public static boolean freeSelf(ServerPlayer player, net.minecraft.world.InteractionHand hand, ItemStack crowbar) {
+        BlockPos pos = TRAPPED_PLAYERS.get(player.getUUID());
+        if (pos == null || activeLevel == null) return false;
+
+        if (player.getCooldowns().isOnCooldown(crowbar)) {
+            player.displayClientMessage(Component.literal("Лом перезаряджається."), true);
+            return true;
+        }
+
+        if (activeLevel.getBlockState(pos).is(ManikBlocks.TRAP.get())) {
+            activeLevel.setBlock(pos, Blocks.AIR.defaultBlockState(), 3);
+        }
+        ACTIVE_TRAPS.remove(pos);
+        releasePlayersAt(pos);
+        player.getCooldowns().addCooldown(crowbar, CROWBAR_COOLDOWN_TICKS);
+        CrowbarItem.consumeUse(player, hand, crowbar);
+        player.displayClientMessage(Component.literal("Ти визволився з капкана ломом."), true);
+        return true;
+    }
+
     private static void releasePlayersAt(BlockPos trapPos) {
         TRAPPED_PLAYERS.entrySet().removeIf(entry -> entry.getValue().equals(trapPos));
     }
@@ -146,7 +171,7 @@ public final class TrapManager {
 
     private static void holdAtTrap(ServerPlayer player, BlockPos pos) {
         double targetX = pos.getX() + 0.5;
-        double targetY = pos.getY() + 1.0;
+        double targetY = pos.getY();
         double targetZ = pos.getZ() + 0.5;
 
         // Use the ServerPlayer teleport operation when the client has moved,
