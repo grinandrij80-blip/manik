@@ -44,6 +44,8 @@ public final class TripwireManager {
         final Vec3 a;
         final Vec3 b;
         final String tag;
+        boolean floorA;
+        boolean floorB;
 
         Wire(ServerLevel level, Vec3 a, Vec3 b, String tag) {
             this.level = level;
@@ -97,8 +99,11 @@ public final class TripwireManager {
 
         PENDING.remove(player.getUUID());
         String tag = "manik_tw_" + (++counter);
-        spawnWire(level, first, new Anchor(level, point, floor), tag);
-        WIRES.add(new Wire(level, first.point(), point, tag));
+        spawnWire(level, first, new Anchor(level, point, floor), tag, player);
+        Wire wire = new Wire(level, first.point(), point, tag);
+        wire.floorA = first.floor();
+        wire.floorB = floor;
+        WIRES.add(wire);
         player.getCooldowns().addCooldown(stack, COOLDOWN_TICKS);
         player.displayClientMessage(Component.literal("Розтяжку встановлено."), true);
     }
@@ -106,6 +111,9 @@ public final class TripwireManager {
     public static void onServerTick(TickEvent.ServerTickEvent.Post event) {
         if (WIRES.isEmpty() || !GameConfig.isRunning()) return;
         MinecraftServer server = event.server();
+        if (server.getTickCount() % 4 == 0) {
+            for (Wire wire : WIRES) showParticles(wire);
+        }
 
         List<Wire> fired = new ArrayList<>();
         for (Wire wire : WIRES) {
@@ -126,10 +134,35 @@ public final class TripwireManager {
         }
     }
 
+    /** Faint dust along the wire (always visible) plus black dust at floor knobs. */
+    private static void showParticles(Wire wire) {
+        net.minecraft.core.particles.DustParticleOptions faint =
+                new net.minecraft.core.particles.DustParticleOptions(0xE8E8E8, 0.45F);
+        Vec3 d = wire.b.subtract(wire.a);
+        int steps = Math.max(2, (int) Math.ceil(d.length() / 0.2));
+        for (int i = 0; i <= steps; i++) {
+            Vec3 p = wire.a.add(d.scale(i / (double) steps));
+            wire.level.sendParticles(faint, p.x, p.y, p.z, 1, 0.0, 0.0, 0.0, 0.0);
+        }
+        if (wire.floorA || wire.floorB) {
+            net.minecraft.core.particles.DustParticleOptions black =
+                    new net.minecraft.core.particles.DustParticleOptions(0x050505, 1.4F);
+            if (wire.floorA) knob(wire, black, wire.a);
+            if (wire.floorB) knob(wire, black, wire.b);
+        }
+    }
+
+    private static void knob(Wire wire, net.minecraft.core.particles.DustParticleOptions black, Vec3 end) {
+        for (double h = 0.0; h <= FLOOR_LIFT; h += 0.06) {
+            wire.level.sendParticles(black, end.x, end.y - h, end.z, 1, 0.0, 0.0, 0.0, 0.0);
+        }
+    }
+
     private static void stun(ServerPlayer player, long now) {
         STUNNED_UNTIL.put(player.getUUID(), player.level().getGameTime() + STUN_TICKS);
         player.setSprinting(false);
         player.addEffect(new MobEffectInstance(MobEffects.SLOWNESS, STUN_TICKS, 255, false, false, true));
+        player.addEffect(new MobEffectInstance(MobEffects.GLOWING, STUN_TICKS, 0, false, false, false));
         player.displayClientMessage(Component.literal("Ти потрапив на розтяжку! Оглушено на 5 секунд."), true);
     }
 
@@ -166,7 +199,7 @@ public final class TripwireManager {
 
     // ---- visuals -------------------------------------------------------------------
 
-    private static void spawnWire(ServerLevel level, Anchor first, Anchor second, String tag) {
+    private static void spawnWire(ServerLevel level, Anchor first, Anchor second, String tag, ServerPlayer reporter) {
         Vec3 a = first.point();
         Vec3 b = second.point();
         Vec3 d = b.subtract(a);
@@ -197,7 +230,7 @@ public final class TripwireManager {
 
         summon(level, a, tag, "minecraft:light_gray_stained_glass",
                 new double[]{qx, qy, qz, qw}, new double[]{length, WIRE_THICKNESS, WIRE_THICKNESS},
-                new double[]{offset.x, offset.y, offset.z});
+                new double[]{offset.x, offset.y, offset.z}, reporter);
 
         // Black knobs under the ends that sit on the floor.
         for (Anchor end : new Anchor[]{first, second}) {
@@ -205,7 +238,7 @@ public final class TripwireManager {
             Vec3 p = end.point();
             summon(level, new Vec3(p.x - 0.06, p.y - FLOOR_LIFT, p.z - 0.06), tag, "minecraft:black_concrete",
                     new double[]{0, 0, 0, 1}, new double[]{0.12, FLOOR_LIFT + 0.02, 0.12},
-                    new double[]{0, 0, 0});
+                    new double[]{0, 0, 0}, reporter);
         }
     }
 
@@ -218,7 +251,8 @@ public final class TripwireManager {
     }
 
     private static void summon(ServerLevel level, Vec3 pos, String tag, String block,
-                               double[] rotation, double[] scale, double[] translation) {
+                               double[] rotation, double[] scale, double[] translation,
+                               ServerPlayer reporter) {
         String nbt = String.format(Locale.ROOT,
                 "{Tags:[\"%s\",\"%s\"],block_state:{Name:\"%s\"},transformation:{"
                         + "left_rotation:[%sf,%sf,%sf,%sf],right_rotation:[0f,0f,0f,1f],"
@@ -231,7 +265,11 @@ public final class TripwireManager {
                 fmt(pos.x), fmt(pos.y), fmt(pos.z), nbt);
         MinecraftServer server = level.getServer();
         CommandSourceStack source = server.createCommandSourceStack().withLevel(level).withSuppressedOutput();
-        server.getCommands().performPrefixedCommand(source, command);
+        try {
+            server.getCommands().getDispatcher().execute(command, source);
+        } catch (com.mojang.brigadier.exceptions.CommandSyntaxException e) {
+            reporter.displayClientMessage(Component.literal("Помилка візуалу розтяжки: " + e.getMessage()), false);
+        }
     }
 
     private static String fmt(double value) {
