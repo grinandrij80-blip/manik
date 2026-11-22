@@ -77,17 +77,26 @@ public final class PowerHud {
             }
         }
 
-        // Lightning bolt icon, drawn from rectangles so no texture file is needed.
-        int bolt = ready || active ? 0xFFFFD83A : 0xFF555555;
-        int bx = cx - 6;
-        int by = cy - 10;
-        graphics.fill(bx + 7, by, bx + 12, by + 3, bolt);
-        graphics.fill(bx + 5, by + 3, bx + 10, by + 6, bolt);
-        graphics.fill(bx + 3, by + 6, bx + 8, by + 9, bolt);
-        graphics.fill(bx + 1, by + 9, bx + 12, by + 12, bolt);
-        graphics.fill(bx + 5, by + 12, bx + 10, by + 15, bolt);
-        graphics.fill(bx + 3, by + 15, bx + 8, by + 18, bolt);
-        graphics.fill(bx + 1, by + 18, bx + 6, by + 21, bolt);
+        // Angry, screaming maniac face, drawn from rectangles so no texture file is needed.
+        boolean lit = ready || active;
+        int dark = 0xFF101010;
+        int face = lit ? 0xFFE6E6DC : 0xFF6A6A6A;
+        int eye = lit ? 0xFFE62020 : 0xFF5A2020;
+        int teeth = lit ? 0xFFFFFFFF : 0xFF8A8A8A;
+        graphics.fill(cx - 7, cy - 8, cx + 8, cy + 9, dark);            // frame / hood
+        graphics.fill(cx - 6, cy - 7, cx + 7, cy + 8, face);            // mask
+        graphics.fill(cx - 6, cy - 6, cx - 4, cy - 5, dark);            // left brow (slanted)
+        graphics.fill(cx - 4, cy - 5, cx - 2, cy - 4, dark);
+        graphics.fill(cx - 2, cy - 4, cx, cy - 3, dark);
+        graphics.fill(cx + 5, cy - 6, cx + 7, cy - 5, dark);            // right brow (slanted)
+        graphics.fill(cx + 3, cy - 5, cx + 5, cy - 4, dark);
+        graphics.fill(cx + 1, cy - 4, cx + 3, cy - 3, dark);
+        graphics.fill(cx - 5, cy - 3, cx - 1, cy - 1, eye);             // eyes
+        graphics.fill(cx + 2, cy - 3, cx + 6, cy - 1, eye);
+        graphics.fill(cx - 1, cy + 1, cx + 2, cy + 3, dark);            // nose
+        graphics.fill(cx - 4, cy + 4, cx + 5, cy + 8, dark);            // open mouth
+        graphics.fill(cx - 3, cy + 4, cx + 4, cy + 5, teeth);           // upper teeth
+        graphics.fill(cx - 2, cy + 7, cx + 3, cy + 8, 0xFF6A0F0F);      // tongue
     }
 
     private PowerHud() {}
