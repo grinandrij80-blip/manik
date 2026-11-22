@@ -10,7 +10,7 @@ import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.BlockHitResult;
 
-/** Special lever: pulling it starts the 60 second countdown to the exit opening. */
+/** Special lever: pulling it opens special doors 2. */
 public final class ManikLeverBlock extends Block {
     public ManikLeverBlock(Properties properties) {
         super(properties);
@@ -21,7 +21,7 @@ public final class ManikLeverBlock extends Block {
                                                Player player, BlockHitResult hit) {
         if (level.isClientSide()) return InteractionResult.SUCCESS;
         if (player instanceof ServerPlayer serverPlayer) {
-            String error = ExitManager.startCountdown(serverPlayer);
+            String error = ExitManager.pullLever(serverPlayer);
             if (error != null) {
                 serverPlayer.displayClientMessage(Component.literal(error), true);
             }

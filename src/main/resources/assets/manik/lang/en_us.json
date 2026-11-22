@@ -23,5 +23,11 @@
   "item.manik.stun_gun": "Stun gun",
   "item.manik.tripwire": "Tripwire",
   "key.manik.power2": "Maniac: super power 2 (blind survivors)",
-  "item.manik.macadamia": "Macadamia nut"
+  "item.manik.macadamia": "Macadamia nut",
+  "block.manik.exit_door2": "Special door 2",
+  "item.manik.exit_door2": "Special door 2",
+  "block.manik.flare_crate": "Flare crate",
+  "item.manik.flare_crate": "Flare crate",
+  "block.manik.lobby_spawn": "Lobby point",
+  "item.manik.lobby_spawn": "Lobby point"
 }

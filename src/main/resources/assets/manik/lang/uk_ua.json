@@ -23,5 +23,11 @@
   "item.manik.stun_gun": "Електрошокер",
   "item.manik.tripwire": "Розтяжка",
   "key.manik.power2": "Маніяк: суперсила 2 (сліпота виживших)",
-  "item.manik.macadamia": "Горіх макадамія"
+  "item.manik.macadamia": "Горіх макадамія",
+  "block.manik.exit_door2": "Спеціальні двері 2",
+  "item.manik.exit_door2": "Спеціальні двері 2",
+  "block.manik.flare_crate": "Ящик сигнальних ракет",
+  "item.manik.flare_crate": "Ящик сигнальних ракет",
+  "block.manik.lobby_spawn": "Точка лоббі",
+  "item.manik.lobby_spawn": "Точка лоббі"
 }

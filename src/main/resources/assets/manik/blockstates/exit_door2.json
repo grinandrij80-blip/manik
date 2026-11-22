@@ -1,0 +1,11 @@
+{
+  "variants": {
+    "open=false": {
+      "model": "manik:block/exit_door2"
+    },
+    "open=true": {
+      "model": "manik:block/exit_door2",
+      "y": 90
+    }
+  }
+}

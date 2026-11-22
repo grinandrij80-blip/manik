@@ -40,7 +40,8 @@ public final class SpawnMarkerBlock extends Block {
                 || context.isHoldingItem(ManikBlocks.GENERATOR_SPAWN_ITEM.get())
                 || context.isHoldingItem(ManikBlocks.SURVIVOR_SPAWN_ITEM.get())
                 || context.isHoldingItem(ManikBlocks.KILLER_SPAWN_ITEM.get())
-                || context.isHoldingItem(ManikBlocks.EXIT_SPAWN_ITEM.get());
+                || context.isHoldingItem(ManikBlocks.EXIT_SPAWN_ITEM.get())
+                || context.isHoldingItem(ManikBlocks.LOBBY_SPAWN_ITEM.get());
     }
 
     @Override

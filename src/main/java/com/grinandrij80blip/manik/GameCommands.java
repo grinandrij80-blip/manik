@@ -253,6 +253,7 @@ public final class GameCommands {
         }
 
         ExitManager.beginRound(level, survivorIds);
+        RoundCleanup.restoreCrates(level);
         GameConfig.setRunning(true);
         source.getServer().getPlayerList().broadcastSystemMessage(
                 Component.literal("MANIK: гру розпочато! Маніяків: " + killers
@@ -300,6 +301,7 @@ public final class GameCommands {
             player.removeTag("manik_killer");
             player.removeTag("manik_survivor");
         }
+        RoundCleanup.finish(server, cleanupLevel != null ? cleanupLevel : server.overworld());
         server.getPlayerList().broadcastSystemMessage(Component.literal(message), false);
     }
 

@@ -26,16 +26,16 @@ public final class ExitHud {
 
     private static void render(GuiGraphics graphics, net.minecraft.client.DeltaTracker deltaTracker) {
         Minecraft minecraft = Minecraft.getInstance();
-        if (phase == ExitManager.PHASE_NONE || minecraft.player == null || minecraft.options.hideGui) return;
+        if (phase == ExitManager.PHASE_NONE || (phase == ExitManager.PHASE_OPEN && ticksLeft <= 0) || minecraft.player == null || minecraft.options.hideGui) return;
 
         String text;
         int color;
         if (phase == ExitManager.PHASE_COUNTDOWN) {
             int seconds = (ticksLeft + 19) / 20;
-            text = "Вихід відкриється через " + (seconds / 60) + ":" + String.format("%02d", seconds % 60);
+            text = "Вертоліт прилетить через " + (seconds / 60) + ":" + String.format("%02d", seconds % 60);
             color = 0xFFFFFFFF;
         } else {
-            text = "ВИХІД ВІДКРИТО! Біжи в зелену зону!";
+            text = "ВЕРТОЛІТ ПРИЛЕТІВ!";
             color = 0xFF55FF77;
         }
         int width = minecraft.font.width(text);

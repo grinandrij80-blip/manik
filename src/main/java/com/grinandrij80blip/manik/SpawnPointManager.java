@@ -31,7 +31,9 @@ public final class SpawnPointManager {
         GENERATOR,
         SURVIVOR,
         KILLER,
-        EXIT
+        EXIT,
+        CRATE,
+        LOBBY
     }
 
     private static final String DATA_ID = "manik_spawn_points";
@@ -48,7 +50,11 @@ public final class SpawnPointManager {
                     POSITIONS_CODEC.optionalFieldOf("killer", List.of())
                             .forGetter(data -> data.toLongList(Type.KILLER)),
                     POSITIONS_CODEC.optionalFieldOf("exit", List.of())
-                            .forGetter(data -> data.toLongList(Type.EXIT))
+                            .forGetter(data -> data.toLongList(Type.EXIT)),
+                    POSITIONS_CODEC.optionalFieldOf("crate", List.of())
+                            .forGetter(data -> data.toLongList(Type.CRATE)),
+                    POSITIONS_CODEC.optionalFieldOf("lobby", List.of())
+                            .forGetter(data -> data.toLongList(Type.LOBBY))
             ).apply(instance, SpawnPointData::new)
     );
 
@@ -69,7 +75,9 @@ public final class SpawnPointManager {
                 List<Long> generator,
                 List<Long> survivor,
                 List<Long> killer,
-                List<Long> exit
+                List<Long> exit,
+                List<Long> crate,
+                List<Long> lobby
         ) {
             this();
             loadPositions(Type.ITEM, item);
@@ -77,6 +85,8 @@ public final class SpawnPointManager {
             loadPositions(Type.SURVIVOR, survivor);
             loadPositions(Type.KILLER, killer);
             loadPositions(Type.EXIT, exit);
+            loadPositions(Type.CRATE, crate);
+            loadPositions(Type.LOBBY, lobby);
         }
 
         private void loadPositions(Type type, List<Long> packedPositions) {
@@ -190,6 +200,12 @@ public final class SpawnPointManager {
         }
         if (block == ManikBlocks.EXIT_SPAWN.get()) {
             return Type.EXIT;
+        }
+        if (block == ManikBlocks.FLARE_CRATE.get()) {
+            return Type.CRATE;
+        }
+        if (block == ManikBlocks.LOBBY_SPAWN.get()) {
+            return Type.LOBBY;
         }
         return null;
     }

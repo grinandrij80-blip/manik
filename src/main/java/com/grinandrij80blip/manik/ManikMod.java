@@ -37,6 +37,9 @@ public final class ManikMod {
                         output.accept(ManikBlocks.SURVIVOR_SPAWN_ITEM.get());
                         output.accept(ManikBlocks.KILLER_SPAWN_ITEM.get());
                         output.accept(ManikBlocks.EXIT_DOOR_ITEM.get());
+                        output.accept(ManikBlocks.EXIT_DOOR2_ITEM.get());
+                        output.accept(ManikBlocks.FLARE_CRATE_ITEM.get());
+                        output.accept(ManikBlocks.LOBBY_SPAWN_ITEM.get());
                         output.accept(ManikBlocks.EXIT_SPAWN_ITEM.get());
                         output.accept(ManikBlocks.ROUND_LEVER_ITEM.get());
                         output.accept(ManikBlocks.TRAP_ITEM.get());

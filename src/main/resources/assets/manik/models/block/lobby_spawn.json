@@ -1,0 +1,7 @@
+{
+  "parent": "minecraft:block/cube_all",
+  "textures": {
+    "all": "manik:block/lobby_spawn"
+  },
+  "render_type": "minecraft:translucent_moving_block"
+}
