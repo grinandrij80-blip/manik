@@ -64,6 +64,7 @@ public final class GloveManager {
             // Every successful glove hit deals fixed damage; there is no guaranteed kill.
             target.hurt(attacker.damageSources().generic(), HIT_DAMAGE);
 
+            Sfx.at(target, net.minecraft.sounds.SoundEvents.PLAYER_ATTACK_CRIT, 1.0F, 0.8F);
             attacker.getCooldowns().addCooldown(glove, COOLDOWN_TICKS);
             attacker.displayClientMessage(
                     Component.literal("Рукавицю використано. Перезарядка: 12 секунд."), true);
@@ -100,6 +101,7 @@ public final class GloveManager {
             // The crowbar can slip: durability is spent, nobody is stunned, and the
             // cooldown is 5 seconds shorter. The stun gun never slips.
             if (crowbar && attacker.getRandom().nextFloat() < CROWBAR_SLIP_CHANCE) {
+                Sfx.at(target, net.minecraft.sounds.SoundEvents.SHIELD_BLOCK, 1.0F, 1.2F);
                 attacker.getCooldowns().addCooldown(weapon,
                         Math.max(1, TrapManager.CROWBAR_COOLDOWN_TICKS - SLIP_COOLDOWN_REDUCTION_TICKS));
                 CrowbarItem.consumeUse(attacker, InteractionHand.MAIN_HAND, weapon);
@@ -111,6 +113,10 @@ public final class GloveManager {
 
             int stunTicks = crowbar ? CROWBAR_STUN_TICKS : STUN_GUN_STUN_TICKS;
             StaminaManager.stunKiller(target, stunTicks);
+            Sfx.maniacHurt(target);
+            if (stunGun) {
+                Sfx.at(target, net.minecraft.sounds.SoundEvents.LIGHTNING_BOLT_IMPACT, 0.6F, 1.8F);
+            }
 
             if (stunGun) {
                 ShockManager.start(target, stunTicks);

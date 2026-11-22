@@ -20,10 +20,10 @@ import java.util.UUID;
 
 /**
  * Manages reusable traps, survivor capture, cooldowns and crowbar disarming.
- * Trap placement: 55 seconds. Crowbar disarm: 7 seconds.
+ * Trap placement: 40 seconds. Crowbar disarm: 7 seconds.
  */
 public final class TrapManager {
-    public static final int TRAP_COOLDOWN_TICKS = 55 * 20;
+    public static final int TRAP_COOLDOWN_TICKS = 40 * 20;
     public static final int CROWBAR_COOLDOWN_TICKS = 7 * 20;
     /** Fixed trap damage in health points (8 HP = 4 hearts). */
     public static final float TRAP_DAMAGE = 8.0F;
@@ -68,7 +68,9 @@ public final class TrapManager {
                 activeLevel = level;
             }
             ACTIVE_TRAPS.add(event.getPos().immutable());
-            player.displayClientMessage(Component.literal("Капкан встановлено. Предмет збережено. Перезарядка: 55 секунд."), true);
+            Sfx.at(level, event.getPos().getX() + 0.5, event.getPos().getY() + 0.5, event.getPos().getZ() + 0.5,
+                    net.minecraft.sounds.SoundEvents.IRON_TRAPDOOR_CLOSE, 1.0F, 0.7F);
+            player.displayClientMessage(Component.literal("Капкан встановлено. Предмет збережено. Перезарядка: 40 секунд."), true);
         }
         return false;
     }
@@ -104,6 +106,8 @@ public final class TrapManager {
         if (!level.getBlockState(pos).is(ManikBlocks.TRAP.get())) return;
 
         level.setBlock(pos, Blocks.AIR.defaultBlockState(), 3);
+        Sfx.at(level, pos.getX() + 0.5, pos.getY() + 0.5, pos.getZ() + 0.5,
+                net.minecraft.sounds.SoundEvents.SHIELD_BREAK, 1.0F, 0.9F);
         ACTIVE_TRAPS.remove(pos);
         releasePlayersAt(pos);
         player.getCooldowns().addCooldown(crowbar, CROWBAR_COOLDOWN_TICKS);
@@ -134,6 +138,8 @@ public final class TrapManager {
 
         if (activeLevel.getBlockState(pos).is(ManikBlocks.TRAP.get())) {
             activeLevel.setBlock(pos, Blocks.AIR.defaultBlockState(), 3);
+            Sfx.at(activeLevel, pos.getX() + 0.5, pos.getY() + 0.5, pos.getZ() + 0.5,
+                    net.minecraft.sounds.SoundEvents.SHIELD_BREAK, 1.0F, 0.9F);
         }
         ACTIVE_TRAPS.remove(pos);
         releasePlayersAt(pos);
@@ -258,6 +264,8 @@ public final class TrapManager {
         }
 
         player.hurt(serverLevel.damageSources().generic(), TRAP_DAMAGE);
+        Sfx.at(serverLevel, pos.getX() + 0.5, pos.getY() + 0.5, pos.getZ() + 0.5,
+                net.minecraft.sounds.SoundEvents.ANVIL_PLACE, 1.0F, 1.4F);
         if (player.isAlive()) {
             BlockPos immutablePos = pos.immutable();
             TRAPPED_PLAYERS.put(player.getUUID(), immutablePos);

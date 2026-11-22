@@ -56,6 +56,7 @@ public final class ManikMod {
             PowerHud.register();
             ExitHud.register();
             ShakeClient.register();
+            JumpscareHud.register();
         }
         RegisterCommandsEvent.BUS.addListener(GameCommands::onRegisterCommands);
         BlockEvent.EntityPlaceEvent.BUS.addListener(SpawnPointManager::onBlockPlace);

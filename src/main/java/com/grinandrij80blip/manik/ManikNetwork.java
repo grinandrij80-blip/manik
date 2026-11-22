@@ -15,11 +15,12 @@ public final class ManikNetwork {
 
     private record ExitSyncPacket(int phase, int ticksLeft) {}
     private record ShakePacket(int ticks) {}
-    private record PowerRequestPacket() {}
-    private record PowerSyncPacket(int cooldownTicks, int activeTicks, boolean enabled) {}
+    private record JumpscarePacket() {}
+    private record PowerRequestPacket(int slot) {}
+    private record PowerSyncPacket(int cooldown1, int active1, int cooldown2, int active2, boolean enabled) {}
 
     private static final SimpleChannel CHANNEL =
-            ChannelBuilder.named("manik:main").networkProtocolVersion(7).simpleChannel();
+            ChannelBuilder.named("manik:main").networkProtocolVersion(8).simpleChannel();
 
     private static final StreamCodec<RegistryFriendlyByteBuf, UseInputPacket> USE_INPUT_CODEC =
             StreamCodec.of(
@@ -42,16 +43,24 @@ public final class ManikNetwork {
             );
 
     private static final StreamCodec<RegistryFriendlyByteBuf, PowerRequestPacket> POWER_REQUEST_CODEC =
-            StreamCodec.of((buffer, packet) -> {}, buffer -> new PowerRequestPacket());
+            StreamCodec.of(
+                    (buffer, packet) -> buffer.writeVarInt(packet.slot()),
+                    buffer -> new PowerRequestPacket(buffer.readVarInt()));
+
+    private static final StreamCodec<RegistryFriendlyByteBuf, JumpscarePacket> JUMPSCARE_CODEC =
+            StreamCodec.of((buffer, packet) -> {}, buffer -> new JumpscarePacket());
 
     private static final StreamCodec<RegistryFriendlyByteBuf, PowerSyncPacket> POWER_SYNC_CODEC =
             StreamCodec.of(
                     (buffer, packet) -> {
-                        buffer.writeVarInt(packet.cooldownTicks());
-                        buffer.writeVarInt(packet.activeTicks());
+                        buffer.writeVarInt(packet.cooldown1());
+                        buffer.writeVarInt(packet.active1());
+                        buffer.writeVarInt(packet.cooldown2());
+                        buffer.writeVarInt(packet.active2());
                         buffer.writeBoolean(packet.enabled());
                     },
-                    buffer -> new PowerSyncPacket(buffer.readVarInt(), buffer.readVarInt(), buffer.readBoolean())
+                    buffer -> new PowerSyncPacket(buffer.readVarInt(), buffer.readVarInt(),
+                            buffer.readVarInt(), buffer.readVarInt(), buffer.readBoolean())
             );
 
     private static final StreamCodec<RegistryFriendlyByteBuf, ExitSyncPacket> EXIT_SYNC_CODEC =
@@ -77,7 +86,7 @@ public final class ManikNetwork {
                 })
                 .addMain(PowerRequestPacket.class, POWER_REQUEST_CODEC, (packet, context) -> {
                     ServerPlayer sender = context.getSender();
-                    if (sender != null) PowerManager.activate(sender);
+                    if (sender != null) PowerManager.activate(sender, packet.slot());
                 });
 
         CHANNEL.play().flow(PacketFlow.CLIENTBOUND)
@@ -91,7 +100,10 @@ public final class ManikNetwork {
                         (packet, context) -> ShakeClient.start(packet.ticks()))
                 .addMain(PowerSyncPacket.class, POWER_SYNC_CODEC,
                         (packet, context) -> PowerHud.update(
-                                packet.cooldownTicks(), packet.activeTicks(), packet.enabled()))
+                                packet.cooldown1(), packet.active1(),
+                                packet.cooldown2(), packet.active2(), packet.enabled()))
+                .addMain(JumpscarePacket.class, JUMPSCARE_CODEC,
+                        (packet, context) -> JumpscareHud.start())
                 .build();
     }
 
@@ -107,13 +119,18 @@ public final class ManikNetwork {
         CHANNEL.send(new ShakePacket(ticks), PacketDistributor.PLAYER.with(player));
     }
 
-    public static void sendPowerRequest() {
-        CHANNEL.send(new PowerRequestPacket(), PacketDistributor.SERVER.noArg());
+    public static void sendPowerRequest(int slot) {
+        CHANNEL.send(new PowerRequestPacket(slot), PacketDistributor.SERVER.noArg());
     }
 
-    public static void sendPower(ServerPlayer player, int cooldownTicks, int activeTicks, boolean enabled) {
-        CHANNEL.send(new PowerSyncPacket(cooldownTicks, activeTicks, enabled),
+    public static void sendPower(ServerPlayer player, int cooldown1, int active1,
+                                 int cooldown2, int active2, boolean enabled) {
+        CHANNEL.send(new PowerSyncPacket(cooldown1, active1, cooldown2, active2, enabled),
                 PacketDistributor.PLAYER.with(player));
+    }
+
+    public static void sendJumpscare(ServerPlayer player) {
+        CHANNEL.send(new JumpscarePacket(), PacketDistributor.PLAYER.with(player));
     }
 
     public static void sendStamina(ServerPlayer player, int stamina, int exhaustionTicks,

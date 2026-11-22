@@ -104,6 +104,7 @@ public final class TripwireManager {
         wire.floorA = first.floor();
         wire.floorB = floor;
         WIRES.add(wire);
+        Sfx.at(level, point.x, point.y, point.z, net.minecraft.sounds.SoundEvents.TRIPWIRE_ATTACH, 1.0F, 1.0F);
         player.getCooldowns().addCooldown(stack, COOLDOWN_TICKS);
         player.displayClientMessage(Component.literal("Розтяжку встановлено."), true);
     }
@@ -162,6 +163,7 @@ public final class TripwireManager {
         STUNNED_UNTIL.put(player.getUUID(), player.level().getGameTime() + STUN_TICKS);
         player.setSprinting(false);
         ShockManager.start(player, STUN_TICKS);
+        Sfx.at(player, net.minecraft.sounds.SoundEvents.TRIPWIRE_DETACH, 1.0F, 1.0F);
         player.addEffect(new MobEffectInstance(MobEffects.SLOWNESS, STUN_TICKS, 255, false, false, true));
         player.addEffect(new MobEffectInstance(MobEffects.GLOWING, STUN_TICKS, 0, false, false, false));
         player.displayClientMessage(Component.literal("Ти потрапив на розтяжку! Оглушено на 5 секунд."), true);

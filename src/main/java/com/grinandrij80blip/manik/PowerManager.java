@@ -1,6 +1,8 @@
 package com.grinandrij80blip.manik;
 
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.sounds.SoundEvents;
+import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.effect.MobEffects;
 import net.minecraftforge.event.TickEvent;
@@ -10,30 +12,76 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 
-/** Server side of the maniac super power: 6 s of Speed III, then a 60 s cooldown. */
+/**
+ * Server side of the maniac super powers.
+ * Power 1: Speed III + Jump Boost IV for 6 s (the maniac is nauseous meanwhile) and a
+ *          jump scare for every survivor. Cooldown 60 s.
+ * Power 2: every survivor glows and is blinded for 6 s. Cooldown 60 s.
+ */
 public final class PowerManager {
     public static final int DURATION_TICKS = 6 * 20;
     public static final int COOLDOWN_TICKS = 60 * 20;
+    public static final int DURATION2_TICKS = 6 * 20;
+    public static final int COOLDOWN2_TICKS = 60 * 20;
 
     private static final Map<UUID, Long> READY_AT = new HashMap<>();
+    private static final Map<UUID, Long> READY_AT2 = new HashMap<>();
+    private static final Map<UUID, Long> ACTIVE_UNTIL2 = new HashMap<>();
     private static final Map<UUID, Boolean> SYNCED_ENABLED = new HashMap<>();
 
     private static boolean isManiac(ServerPlayer player) {
         return GameConfig.isRunning() && player.isAlive() && player.getTags().contains("manik_killer");
     }
 
-    private static int cooldownLeft(ServerPlayer player) {
-        Long readyAt = READY_AT.get(player.getUUID());
-        if (readyAt == null) return 0;
-        return (int) Math.max(0L, readyAt - player.level().getGameTime());
+    private static int left(Map<UUID, Long> map, ServerPlayer player) {
+        Long at = map.get(player.getUUID());
+        if (at == null) return 0;
+        return (int) Math.max(0L, at - player.level().getGameTime());
     }
 
-    public static void activate(ServerPlayer player) {
-        if (!isManiac(player) || StaminaManager.isStunned(player) || cooldownLeft(player) > 0) return;
-        READY_AT.put(player.getUUID(), player.level().getGameTime() + COOLDOWN_TICKS);
-        player.addEffect(new MobEffectInstance(MobEffects.SPEED, DURATION_TICKS, 2, false, false, true));
-        player.addEffect(new MobEffectInstance(MobEffects.JUMP_BOOST, DURATION_TICKS, 3, false, false, true));
-        ManikNetwork.sendPower(player, COOLDOWN_TICKS, DURATION_TICKS, true);
+    public static void activate(ServerPlayer player, int slot) {
+        if (!isManiac(player) || StaminaManager.isStunned(player)) return;
+        long now = player.level().getGameTime();
+
+        if (slot == 0) {
+            if (left(READY_AT, player) > 0) return;
+            READY_AT.put(player.getUUID(), now + COOLDOWN_TICKS);
+            player.addEffect(new MobEffectInstance(MobEffects.SPEED, DURATION_TICKS, 2, false, false, true));
+            player.addEffect(new MobEffectInstance(MobEffects.JUMP_BOOST, DURATION_TICKS, 3, false, false, true));
+            player.addEffect(new MobEffectInstance(MobEffects.NAUSEA, DURATION_TICKS, 0, false, false, true));
+            jumpscareSurvivors(player);
+        } else {
+            if (left(READY_AT2, player) > 0) return;
+            READY_AT2.put(player.getUUID(), now + COOLDOWN2_TICKS);
+            ACTIVE_UNTIL2.put(player.getUUID(), now + DURATION2_TICKS);
+            for (ServerPlayer other : player.level().getServer().getPlayerList().getPlayers()) {
+                if (other == player || !other.isAlive() || other.isSpectator()
+                        || !other.getTags().contains("manik_survivor")) continue;
+                other.addEffect(new MobEffectInstance(MobEffects.GLOWING, DURATION2_TICKS, 0, false, false, false));
+                other.addEffect(new MobEffectInstance(MobEffects.BLINDNESS, DURATION2_TICKS, 0, false, false, true));
+            }
+        }
+        sync(player);
+    }
+
+    /** Screaming maniac face and a roar for every survivor. */
+    private static void jumpscareSurvivors(ServerPlayer maniac) {
+        for (ServerPlayer other : maniac.level().getServer().getPlayerList().getPlayers()) {
+            if (other == maniac || !other.isAlive() || other.isSpectator()
+                    || !other.getTags().contains("manik_survivor")) continue;
+            ManikNetwork.sendJumpscare(other);
+            ManikNetwork.sendShake(other, 25);
+            other.playNotifySound(SoundEvents.GHAST_SCREAM, SoundSource.HOSTILE, 1.0F, 0.6F);
+            other.playNotifySound(SoundEvents.ENDERMAN_SCREAM, SoundSource.HOSTILE, 1.0F, 0.5F);
+        }
+    }
+
+    private static void sync(ServerPlayer player) {
+        int active1 = 0;
+        MobEffectInstance speed = player.getEffect(MobEffects.SPEED);
+        if (speed != null && speed.getAmplifier() == 2) active1 = Math.min(speed.getDuration(), DURATION_TICKS);
+        int active2 = left(ACTIVE_UNTIL2, player);
+        ManikNetwork.sendPower(player, left(READY_AT, player), active1, left(READY_AT2, player), active2, true);
     }
 
     public static void onPlayerTick(TickEvent.PlayerTickEvent.Post event) {
@@ -43,8 +91,10 @@ public final class PowerManager {
 
         if (!maniac) {
             READY_AT.remove(id);
+            READY_AT2.remove(id);
+            ACTIVE_UNTIL2.remove(id);
             if (Boolean.TRUE.equals(SYNCED_ENABLED.remove(id))) {
-                ManikNetwork.sendPower(player, 0, 0, false);
+                ManikNetwork.sendPower(player, 0, 0, 0, 0, false);
             }
             return;
         }
@@ -52,9 +102,7 @@ public final class PowerManager {
         // Re-sync once a second (also covers joining, respawning and new rounds).
         if (player.tickCount % 20 == 0 || !Boolean.TRUE.equals(SYNCED_ENABLED.get(id))) {
             SYNCED_ENABLED.put(id, true);
-            MobEffectInstance speed = player.getEffect(MobEffects.SPEED);
-            int active = speed != null && speed.getAmplifier() == 2 ? Math.min(speed.getDuration(), DURATION_TICKS) : 0;
-            ManikNetwork.sendPower(player, cooldownLeft(player), active, true);
+            sync(player);
         }
     }
 
@@ -72,6 +120,8 @@ public final class PowerManager {
     public static void onLogout(PlayerEvent.PlayerLoggedOutEvent event) {
         UUID id = event.getEntity().getUUID();
         READY_AT.remove(id);
+        READY_AT2.remove(id);
+        ACTIVE_UNTIL2.remove(id);
         SYNCED_ENABLED.remove(id);
     }
 
