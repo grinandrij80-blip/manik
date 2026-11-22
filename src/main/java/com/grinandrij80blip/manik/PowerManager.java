@@ -2,7 +2,6 @@ package com.grinandrij80blip.manik;
 
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundEvents;
-import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.effect.MobEffects;
 import net.minecraftforge.event.TickEvent;
@@ -71,8 +70,8 @@ public final class PowerManager {
                     || !other.getTags().contains("manik_survivor")) continue;
             ManikNetwork.sendJumpscare(other);
             ManikNetwork.sendShake(other, 25);
-            other.playNotifySound(SoundEvents.GHAST_SCREAM, SoundSource.HOSTILE, 1.0F, 0.6F);
-            other.playNotifySound(SoundEvents.ENDERMAN_SCREAM, SoundSource.HOSTILE, 1.0F, 0.5F);
+            Sfx.toPlayer(other, SoundEvents.GHAST_SCREAM, 1.0F, 0.6F);
+            Sfx.toPlayer(other, SoundEvents.ENDERMAN_SCREAM, 1.0F, 0.5F);
         }
     }
 
