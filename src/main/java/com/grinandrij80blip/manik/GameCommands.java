@@ -31,7 +31,12 @@ public final class GameCommands {
     public static void onRegisterCommands(RegisterCommandsEvent event) {
         CommandDispatcher<CommandSourceStack> dispatcher = event.getDispatcher();
         dispatcher.register(Commands.literal("game")
-                .then(Commands.literal("start").executes(context -> start(context.getSource())))
+                .then(Commands.literal("start")
+                        .executes(context -> start(context.getSource(), List.of()))
+                        .then(Commands.argument("maniacs", net.minecraft.commands.arguments.EntityArgument.players())
+                                .executes(context -> start(context.getSource(),
+                                        new ArrayList<>(net.minecraft.commands.arguments.EntityArgument
+                                                .getPlayers(context, "maniacs"))))))
                 .then(Commands.literal("stop").executes(context -> stop(context.getSource())))
                 .then(Commands.literal("status").executes(context -> status(context.getSource())))
                 .then(Commands.literal("killer")
@@ -67,14 +72,15 @@ public final class GameCommands {
         return 1;
     }
 
-    private static int start(CommandSourceStack source) {
+    private static int start(CommandSourceStack source, List<ServerPlayer> chosenManiacs) {
         GameConfig.load(source.getLevel());
         if (GameConfig.isRunning()) {
             source.sendFailure(Component.literal("Гра MANIK уже запущена."));
             return 0;
         }
         int players = source.getServer().getPlayerList().getPlayers().size();
-        int killers = GameConfig.killers();
+        // Players named in /game start <nick> are always maniacs; any missing ones are drawn at random.
+        int killers = Math.max(GameConfig.killers(), chosenManiacs.size());
         if (players < 2) {
             source.sendFailure(Component.literal("Потрібно щонайменше 2 гравці."));
             return 0;
@@ -114,6 +120,8 @@ public final class GameCommands {
 
         List<ServerPlayer> shuffledPlayers = new ArrayList<>(source.getServer().getPlayerList().getPlayers());
         Collections.shuffle(shuffledPlayers);
+        shuffledPlayers.removeAll(chosenManiacs);
+        shuffledPlayers.addAll(0, chosenManiacs);
         Collections.shuffle(killerSpawns);
         Collections.shuffle(survivorSpawns);
 
