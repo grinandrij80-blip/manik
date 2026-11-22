@@ -137,6 +137,7 @@ public final class GameCommands {
             net.minecraft.world.entity.item.ItemEntity canister = new net.minecraft.world.entity.item.ItemEntity(
                     level, itemPos.getX() + 0.5, itemPos.getY() + 0.05, itemPos.getZ() + 0.5,
                     new net.minecraft.world.item.ItemStack(ManikItems.CANISTER.get()));
+            canister.setUnlimitedLifetime();
             if (level.addFreshEntity(canister)) ACTIVE_ITEMS.add(canister.getUUID());
         }
 
@@ -148,6 +149,7 @@ public final class GameCommands {
                     utilityRoll == 0 ? ManikItems.CROWBAR.get() : ManikItems.MEDKIT.get());
             net.minecraft.world.entity.item.ItemEntity utilityItem = new net.minecraft.world.entity.item.ItemEntity(
                     level, itemPos.getX() + 0.5, itemPos.getY() + 0.05, itemPos.getZ() + 0.5, stack);
+            utilityItem.setUnlimitedLifetime();
             if (level.addFreshEntity(utilityItem)) ACTIVE_ITEMS.add(utilityItem.getUUID());
         }
 
