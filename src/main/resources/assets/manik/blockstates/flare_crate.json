@@ -1,7 +1,7 @@
 {
   "variants": {
     "": {
-      "model": "manik:block/flare_crate"
+      "model": "manik:block/flare_crate_3d"
     }
   }
 }

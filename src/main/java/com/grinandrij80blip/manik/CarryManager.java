@@ -106,7 +106,15 @@ public final class CarryManager {
         player.displayClientMessage(Component.literal("Ти поставив ящик."), true);
     }
 
+    /** Tells everybody who carries the crate, so they can see the pose and the crate. */
+    private static void broadcastCarrier(net.minecraft.server.MinecraftServer server, int entityId) {
+        for (ServerPlayer p : server.getPlayerList().getPlayers()) {
+            ManikNetwork.sendCarrier(p, entityId);
+        }
+    }
+
     private static void setCarrying(ServerPlayer player, boolean carrying) {
+        broadcastCarrier(player.level().getServer(), carrying ? player.getId() : -1);
         AttributeInstance speed = player.getAttribute(Attributes.MOVEMENT_SPEED);
         if (speed != null) {
             speed.removeModifier(SLOW_ID);
@@ -200,6 +208,7 @@ public final class CarryManager {
             return;
         }
         player.setSprinting(false);
+        if (player.tickCount % 20 == 0) broadcastCarrier(player.level().getServer(), player.getId());
     }
 
     public static void onLogout(PlayerEvent.PlayerLoggedOutEvent event) {

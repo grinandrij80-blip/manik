@@ -72,6 +72,9 @@ public final class ManikBlocks {
             () -> new BlockItem(LOBBY_SPAWN.get(), new Item.Properties().setId(ITEMS.key("lobby_spawn"))));
     public static final RegistryObject<Item> EXIT_DOOR2_ITEM = ITEMS.register("exit_door2",
             () -> new BlockItem(EXIT_DOOR2.get(), new Item.Properties().setId(ITEMS.key("exit_door2"))));
+    /** Only used to draw the carried crate; players never get this item. */
+    public static final RegistryObject<Item> FLARE_CRATE_ITEM = ITEMS.register("flare_crate",
+            () -> new BlockItem(FLARE_CRATE.get(), new Item.Properties().setId(ITEMS.key("flare_crate"))));
     public static final RegistryObject<Item> CRATE_SPAWN_ITEM = ITEMS.register("crate_spawn",
             () -> new BlockItem(CRATE_SPAWN.get(), new Item.Properties().setId(ITEMS.key("crate_spawn"))));
     public static final RegistryObject<Item> EXIT_DOOR_ITEM = ITEMS.register("exit_door",

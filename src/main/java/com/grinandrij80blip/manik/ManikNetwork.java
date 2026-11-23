@@ -16,12 +16,13 @@ public final class ManikNetwork {
     private record ExitSyncPacket(int phase, int ticksLeft) {}
     private record ShakePacket(int ticks) {}
     private record CarryPacket(boolean carrying) {}
+    private record CarrierPacket(int entityId) {}
     private record JumpscarePacket() {}
     private record PowerRequestPacket(int slot) {}
     private record PowerSyncPacket(int cooldown1, int active1, int cooldown2, int active2, boolean enabled) {}
 
     private static final SimpleChannel CHANNEL =
-            ChannelBuilder.named("manik:main").networkProtocolVersion(9).simpleChannel();
+            ChannelBuilder.named("manik:main").networkProtocolVersion(10).simpleChannel();
 
     private static final StreamCodec<RegistryFriendlyByteBuf, UseInputPacket> USE_INPUT_CODEC =
             StreamCodec.of(
@@ -85,6 +86,12 @@ public final class ManikNetwork {
                     buffer -> new CarryPacket(buffer.readBoolean())
             );
 
+    private static final StreamCodec<RegistryFriendlyByteBuf, CarrierPacket> CARRIER_CODEC =
+            StreamCodec.of(
+                    (buffer, packet) -> buffer.writeVarInt(packet.entityId() + 1),
+                    buffer -> new CarrierPacket(buffer.readVarInt() - 1)
+            );
+
     public static void register() {
         CHANNEL.play().flow(PacketFlow.SERVERBOUND)
                 .addMain(UseInputPacket.class, USE_INPUT_CODEC, (packet, context) -> {
@@ -111,6 +118,8 @@ public final class ManikNetwork {
                                 packet.cooldown2(), packet.active2(), packet.enabled()))
                 .addMain(CarryPacket.class, CARRY_CODEC,
                         (packet, context) -> CarryState.set(packet.carrying()))
+                .addMain(CarrierPacket.class, CARRIER_CODEC,
+                        (packet, context) -> CarryState.setCarrierId(packet.entityId()))
                 .addMain(JumpscarePacket.class, JUMPSCARE_CODEC,
                         (packet, context) -> JumpscareHud.start())
                 .build();
@@ -140,6 +149,10 @@ public final class ManikNetwork {
 
     public static void sendCarry(ServerPlayer player, boolean carrying) {
         CHANNEL.send(new CarryPacket(carrying), PacketDistributor.PLAYER.with(player));
+    }
+
+    public static void sendCarrier(ServerPlayer player, int entityId) {
+        CHANNEL.send(new CarrierPacket(entityId), PacketDistributor.PLAYER.with(player));
     }
 
     public static void sendJumpscare(ServerPlayer player) {
