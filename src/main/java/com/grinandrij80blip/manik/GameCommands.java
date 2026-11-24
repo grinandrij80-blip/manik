@@ -255,9 +255,9 @@ public final class GameCommands {
                     player.getInventory().setItem(gloveSlot,
                             new net.minecraft.world.item.ItemStack(ManikItems.MARK_GLOVE.get()));
                     player.sendSystemMessage(Component.literal(
-                            "Тобі видано рукавицю: влучання знімає 8 HP (4 серця). Перезарядка: 12 секунд."));
+                            "Тобі видано ніж: влучання знімає 8 HP (4 серця). Перезарядка: 12 секунд."));
                 } else {
-                    player.sendSystemMessage(Component.literal("Немає вільного місця для рукавиці! Звільни слот."));
+                    player.sendSystemMessage(Component.literal("Немає вільного місця для ножа! Звільни слот."));
                 }
 
                 int wireSlot = -1;

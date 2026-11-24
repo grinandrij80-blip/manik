@@ -45,7 +45,7 @@ public final class GloveManager {
             ItemStack glove = attacker.getMainHandItem();
             if (!glove.is(ManikItems.MARK_GLOVE.get())) {
                 attacker.displayClientMessage(
-                        Component.literal("Маніяк може атакувати лише рукавицею."), true);
+                        Component.literal("Маніяк може атакувати лише ножем."), true);
                 return true;
             }
 
@@ -57,7 +57,7 @@ public final class GloveManager {
             // Keep the glove hit from applying vanilla melee damage as well.
             if (attacker.getCooldowns().isOnCooldown(glove)) {
                 attacker.displayClientMessage(
-                        Component.literal("Рукавиця перезаряджається."), true);
+                        Component.literal("Ніж перезаряджається."), true);
                 return true;
             }
 
@@ -67,9 +67,9 @@ public final class GloveManager {
             Sfx.at(target, net.minecraft.sounds.SoundEvents.PLAYER_ATTACK_CRIT, 1.0F, 0.8F);
             attacker.getCooldowns().addCooldown(glove, COOLDOWN_TICKS);
             attacker.displayClientMessage(
-                    Component.literal("Рукавицю використано. Перезарядка: 12 секунд."), true);
+                    Component.literal("Ніж використано. Перезарядка: 12 секунд."), true);
             target.displayClientMessage(
-                    Component.literal("Влучання рукавицею: -8 HP."), true);
+                    Component.literal("Влучання ножем: -8 HP."), true);
             return true;
         }
 
