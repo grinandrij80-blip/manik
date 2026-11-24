@@ -18,11 +18,17 @@ public final class ManikNetwork {
     private record CarryPacket(boolean carrying) {}
     private record CarrierPacket(int entityId) {}
     private record JumpscarePacket() {}
+    public static final int CINEMATIC_START = 0;
+    public static final int CINEMATIC_FADE_IN = 1;
+    public static final int CINEMATIC_WIN = 2;
+    public static final int CINEMATIC_CANCEL = 3;
+    private record CinematicPacket(int type, int value) {}
+
     private record PowerRequestPacket(int slot) {}
     private record PowerSyncPacket(int cooldown1, int active1, int cooldown2, int active2, boolean enabled) {}
 
     private static final SimpleChannel CHANNEL =
-            ChannelBuilder.named("manik:main").networkProtocolVersion(10).simpleChannel();
+            ChannelBuilder.named("manik:main").networkProtocolVersion(11).simpleChannel();
 
     private static final StreamCodec<RegistryFriendlyByteBuf, UseInputPacket> USE_INPUT_CODEC =
             StreamCodec.of(
@@ -43,6 +49,14 @@ public final class ManikNetwork {
                             buffer.readVarInt(), buffer.readVarInt(), buffer.readVarInt(),
                             buffer.readBoolean(), buffer.readBoolean())
             );
+
+    private static final StreamCodec<RegistryFriendlyByteBuf, CinematicPacket> CINEMATIC_CODEC =
+            StreamCodec.of(
+                    (buffer, packet) -> {
+                        buffer.writeVarInt(packet.type());
+                        buffer.writeVarInt(packet.value());
+                    },
+                    buffer -> new CinematicPacket(buffer.readVarInt(), buffer.readVarInt()));
 
     private static final StreamCodec<RegistryFriendlyByteBuf, PowerRequestPacket> POWER_REQUEST_CODEC =
             StreamCodec.of(
@@ -120,6 +134,8 @@ public final class ManikNetwork {
                         (packet, context) -> CarryState.set(packet.carrying()))
                 .addMain(CarrierPacket.class, CARRIER_CODEC,
                         (packet, context) -> CarryState.setCarrierId(packet.entityId()))
+                .addMain(CinematicPacket.class, CINEMATIC_CODEC,
+                        (packet, context) -> CinematicHud.handle(packet.type(), packet.value()))
                 .addMain(JumpscarePacket.class, JUMPSCARE_CODEC,
                         (packet, context) -> JumpscareHud.start())
                 .build();
@@ -153,6 +169,10 @@ public final class ManikNetwork {
 
     public static void sendCarrier(ServerPlayer player, int entityId) {
         CHANNEL.send(new CarrierPacket(entityId), PacketDistributor.PLAYER.with(player));
+    }
+
+    public static void sendCinematic(ServerPlayer player, int type, int value) {
+        CHANNEL.send(new CinematicPacket(type, value), PacketDistributor.PLAYER.with(player));
     }
 
     public static void sendJumpscare(ServerPlayer player) {

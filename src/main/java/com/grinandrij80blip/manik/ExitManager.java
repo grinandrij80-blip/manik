@@ -166,7 +166,8 @@ public final class ExitManager {
             String text = "MANIK: раунд завершено. Втекли: " + ESCAPED.size()
                     + (names.length() > 0 ? " (" + names + ")" : "")
                     + ", загинули: " + DEAD.size() + ".";
-            GameCommands.endRound(server, text);
+            GameCommands.finishRound(server, text,
+                    ESCAPED.isEmpty() ? CinematicManager.WINNER_MANIAC : CinematicManager.WINNER_SURVIVORS);
         }
     }
 

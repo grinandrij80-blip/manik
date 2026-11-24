@@ -44,8 +44,12 @@ public final class StaminaManager {
             speed.setBaseValue(value);
         }
     }
+    // 150 points = 100 + 50%. Sprint drains 1/tick (7.5 s), regen 0.5/tick.
+    private static final double MAX_STAMINA = 150.0;
+    private static final long EXHAUST_TICKS = 140L; // 7 s without sprint after full depletion
+
     private static final class StaminaState {
-        double stamina = 100.0;
+        double stamina = MAX_STAMINA;
         long exhaustedUntil;
         long jumpBlockedUntil;
         long stunnedUntil;
@@ -121,31 +125,31 @@ public final class StaminaManager {
             setScale(player, MANIAC_SCALE);
             setWalkSpeed(player, MANIAC_WALK_SPEED);
             player.setSprinting(false);
-            state.stamina = Math.min(100.0, state.stamina + 0.5);
+            state.stamina = Math.min(MAX_STAMINA, state.stamina + 0.5);
         } else if (now < state.exhaustedUntil) {
             setScale(player, 1.0D);
             setWalkSpeed(player, SURVIVOR_WALK_SPEED);
             player.setSprinting(false);
-            state.stamina = Math.min(100.0, state.stamina + 0.5);
+            state.stamina = Math.min(MAX_STAMINA, state.stamina + 0.5);
         } else if (player.isSprinting()) {
             setScale(player, 1.0D);
             setWalkSpeed(player, SURVIVOR_WALK_SPEED);
             state.stamina = Math.max(0.0, state.stamina - 1.0);
             if (state.stamina <= 0.0) {
-                state.exhaustedUntil = now + 100L;
+                state.exhaustedUntil = now + EXHAUST_TICKS;
                 state.jumpBlockedUntil = now + 40L;
                 player.setSprinting(false);
                 if (!killer) {
                     player.addEffect(new MobEffectInstance(MobEffects.SLOWNESS, 40, 255, false, true, true));
                 }
                 player.displayClientMessage(
-                        Component.literal("Стаміна вичерпана! Замедлення й заборона стрибка: 2 секунди. Спринт недоступний 5 секунд."),
+                        Component.literal("Стаміна вичерпана! Замедлення й заборона стрибка: 2 секунди. Спринт недоступний 7 секунд."),
                         true);
             }
         } else {
             setScale(player, 1.0D);
             setWalkSpeed(player, SURVIVOR_WALK_SPEED);
-            state.stamina = Math.min(100.0, state.stamina + 0.5);
+            state.stamina = Math.min(MAX_STAMINA, state.stamina + 0.5);
         }
 
         // Survivors get this lock after exhaustion, maniacs only while stunned.
@@ -158,13 +162,13 @@ public final class StaminaManager {
             }
         }
 
-        int stamina = (int) Math.round(state.stamina);
+        int stamina = (int) Math.round(state.stamina / MAX_STAMINA * 100.0);
         int exhaustion = (int) Math.max(0L, state.exhaustedUntil - now);
         int jumpBlocked = (int) Math.max(0L, state.jumpBlockedUntil - now);
 
         // Show the bar while sprint is being used and while stamina is
         // recovering. Hide it again once the survivor is back at full stamina.
-        boolean visible = !killer && (player.isSprinting() || state.stamina < 100.0);
+        boolean visible = !killer && (player.isSprinting() || state.stamina < MAX_STAMINA);
 
         if (player.tickCount % 5 == 0 || stamina != state.lastSentStamina
                 || exhaustion != state.lastSentExhaustion

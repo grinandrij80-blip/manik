@@ -2,6 +2,7 @@ package com.grinandrij80blip.manik;
 
 import com.mojang.brigadier.CommandDispatcher;
 import net.minecraft.commands.CommandSourceStack;
+import net.minecraft.server.MinecraftServer;
 import net.minecraft.commands.Commands;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerPlayer;
@@ -131,7 +132,35 @@ public final class GameCommands {
             return 0;
         }
 
-        List<ServerPlayer> shuffledPlayers = new ArrayList<>(source.getServer().getPlayerList().getPlayers());
+        if (CinematicManager.isStarting() || CinematicManager.isEnding()) {
+            source.sendFailure(Component.literal("Зараз іде відлік або кінцівка раунду — зачекай."));
+            return 0;
+        }
+        MinecraftServer server = source.getServer();
+        final int finalKillers = killers;
+        CinematicManager.beginStart(server, () -> runStart(server, level, chosenManiacs, finalKillers));
+        return 1;
+    }
+
+    /** Runs after the 3-2-1 blackout: spawns everything and teleports the players. */
+    private static void runStart(MinecraftServer server, ServerLevel level,
+                                 List<ServerPlayer> chosenManiacs, int killers) {
+        if (GameConfig.isRunning()) return;
+        chosenManiacs = new ArrayList<>(chosenManiacs);
+        chosenManiacs.removeIf(p -> !server.getPlayerList().getPlayers().contains(p));
+        int players = server.getPlayerList().getPlayers().size();
+        killers = Math.max(killers, chosenManiacs.size());
+        if (players < 2 || killers >= players) {
+            CinematicManager.abortClients(server);
+            server.getPlayerList().broadcastSystemMessage(
+                    Component.literal("MANIK: старт скасовано — гравців стало замало."), false);
+            return;
+        }
+        List<BlockPos> killerSpawns = SpawnPointManager.get(level, SpawnPointManager.Type.KILLER);
+        List<BlockPos> survivorSpawns = SpawnPointManager.get(level, SpawnPointManager.Type.SURVIVOR);
+        int canisterCount = GameConfig.generators() * 2 + 3;
+        int generatorCount = GameConfig.generators() + 1;
+        List<ServerPlayer> shuffledPlayers = new ArrayList<>(server.getPlayerList().getPlayers());
         Collections.shuffle(shuffledPlayers);
         shuffledPlayers.removeAll(chosenManiacs);
         shuffledPlayers.addAll(0, chosenManiacs);
@@ -142,7 +171,7 @@ public final class GameCommands {
         ACTIVE_ITEMS.clear();
         GloveManager.resetRound();
         TrapManager.beginRound(level);
-        TripwireManager.clearAll(source.getServer());
+        TripwireManager.clearAll(server);
         List<BlockPos> generatorSpawns = SpawnPointManager.get(level, SpawnPointManager.Type.GENERATOR);
         Collections.shuffle(generatorSpawns);
         readyAnnounced = false;
@@ -167,11 +196,12 @@ public final class GameCommands {
         // Remaining item points receive only utility loot: 50% crowbar, 50% medkit. Traps are issued to killers.
         for (int i = canisterCount; i < itemSpawns.size(); i++) {
             BlockPos itemPos = itemSpawns.get(i);
-            // 18% stun gun, 20% macadamia nut; the rest is split evenly between crowbar and medkit.
+            // 15% stun gun, 10% nut, 30% crowbar, 25% medkit, 20% wrench.
             int utilityRoll = java.util.concurrent.ThreadLocalRandom.current().nextInt(100);
-            net.minecraft.world.item.Item utilityChoice = utilityRoll < 18 ? ManikItems.STUN_GUN.get()
-                    : utilityRoll < 38 ? ManikItems.MACADAMIA.get()
-                    : (utilityRoll < 69 ? ManikItems.CROWBAR.get() : ManikItems.MEDKIT.get());
+            net.minecraft.world.item.Item utilityChoice = utilityRoll < 15 ? ManikItems.STUN_GUN.get()
+                    : utilityRoll < 25 ? ManikItems.MACADAMIA.get()
+                    : utilityRoll < 55 ? ManikItems.CROWBAR.get()
+                    : utilityRoll < 80 ? ManikItems.MEDKIT.get() : ManikItems.WRENCH.get();
             net.minecraft.world.item.ItemStack stack = new net.minecraft.world.item.ItemStack(utilityChoice);
             net.minecraft.world.entity.item.ItemEntity utilityItem = new net.minecraft.world.entity.item.ItemEntity(
                     level, itemPos.getX() + 0.5, itemPos.getY() + 0.05, itemPos.getZ() + 0.5, stack);
@@ -249,19 +279,23 @@ public final class GameCommands {
             player.teleportTo(level, spawn.getX() + 0.5, spawn.getY(), spawn.getZ() + 0.5,
                     Set.of(), player.getYRot(), player.getXRot(), true);
             player.sendSystemMessage(Component.literal(killer ? "Твоя роль: МАНІЯК" : "Твоя роль: ВИЖИВШИЙ"));
+            CinematicManager.sendRole(player, killer);
             StaminaManager.beginRound(player);
         }
 
         ExitManager.beginRound(level, survivorIds);
         CarryManager.beginRound(level);
         GameConfig.setRunning(true);
-        source.getServer().getPlayerList().broadcastSystemMessage(
+        server.getPlayerList().broadcastSystemMessage(
                 Component.literal("MANIK: гру розпочато! Маніяків: " + killers
                         + ", виживших: " + (players - killers) + "."), false);
-        return 1;
     }
 
     private static int stop(CommandSourceStack source) {
+        if (CinematicManager.cancelStart(source.getServer())) {
+            source.sendSuccess(() -> Component.literal("MANIK: відлік старту скасовано."), true);
+            return 1;
+        }
         if (!GameConfig.isRunning()) {
             source.sendFailure(Component.literal("Гра MANIK зараз не запущена."));
             return 0;
@@ -271,9 +305,16 @@ public final class GameCommands {
         return 1;
     }
 
+    /** Round finished by the rules: win cinematic first, then the normal cleanup and lobby. */
+    public static void finishRound(MinecraftServer server, String message, int winner) {
+        if (CinematicManager.isEnding()) return;
+        CinematicManager.beginEnd(server, winner, () -> endRound(server, message));
+    }
+
     /** Ends the running round (command or escape finish): cleans the map and resets roles. */
     public static void endRound(net.minecraft.server.MinecraftServer server, String message) {
         GameConfig.setRunning(false);
+        CinematicManager.clearEnd(server);
         GloveManager.resetRound();
         ExitManager.reset(server);
         TripwireManager.clearAll(server);

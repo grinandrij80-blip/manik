@@ -15,17 +15,22 @@ import java.util.UUID;
  * Server side of the maniac super powers.
  * Power 1: Speed III + Jump Boost IV for 6 s (the maniac is nauseous meanwhile) and a
  *          jump scare for every survivor. Cooldown 60 s.
- * Power 2: every survivor glows and is blinded for 6 s. Cooldown 2 min.
+ * Power 2: the maniac freezes for 1.5 s, then every survivor glows and is blinded for 8 s. Cooldown 2 min.
  */
 public final class PowerManager {
     public static final int DURATION_TICKS = 6 * 20;
     public static final int COOLDOWN_TICKS = 60 * 20;
-    public static final int DURATION2_TICKS = 6 * 20;
+    public static final int DURATION2_TICKS = 8 * 20;
+    /** The maniac freezes this long before power 2 takes effect. */
+    public static final int FREEZE2_TICKS = 30;
+    /** Powers start the round charged to 35%. */
+    private static final double START_CHARGE = 0.35;
     public static final int COOLDOWN2_TICKS = 120 * 20;
 
     private static final Map<UUID, Long> READY_AT = new HashMap<>();
     private static final Map<UUID, Long> READY_AT2 = new HashMap<>();
     private static final Map<UUID, Long> ACTIVE_UNTIL2 = new HashMap<>();
+    private static final Map<UUID, Long> PENDING2 = new HashMap<>();
     private static final Map<UUID, Boolean> SYNCED_ENABLED = new HashMap<>();
 
     private static boolean isManiac(ServerPlayer player) {
@@ -50,8 +55,17 @@ public final class PowerManager {
             player.addEffect(new MobEffectInstance(MobEffects.NAUSEA, DURATION_TICKS, 0, false, false, true));
             jumpscareSurvivors(player);
         } else {
-            if (left(READY_AT2, player) > 0) return;
+            if (left(READY_AT2, player) > 0 || PENDING2.containsKey(player.getUUID())) return;
             READY_AT2.put(player.getUUID(), now + COOLDOWN2_TICKS);
+            PENDING2.put(player.getUUID(), now + FREEZE2_TICKS);
+            StaminaManager.stunKiller(player, FREEZE2_TICKS);
+        }
+        sync(player);
+    }
+
+    private static void applyPower2(ServerPlayer player) {
+        long now = player.level().getGameTime();
+        {
             ACTIVE_UNTIL2.put(player.getUUID(), now + DURATION2_TICKS);
             for (ServerPlayer other : player.level().getServer().getPlayerList().getPlayers()) {
                 if (other == player || !other.isAlive() || other.isSpectator()
@@ -89,6 +103,7 @@ public final class PowerManager {
         boolean maniac = isManiac(player);
 
         if (!maniac) {
+            PENDING2.remove(id);
             READY_AT.remove(id);
             READY_AT2.remove(id);
             ACTIVE_UNTIL2.remove(id);
@@ -96,6 +111,18 @@ public final class PowerManager {
                 ManikNetwork.sendPower(player, 0, 0, 0, 0, false);
             }
             return;
+        }
+
+        long now = player.level().getGameTime();
+        if (!READY_AT.containsKey(id)) {
+            // First tick of a round for this maniac: powers start 35% charged.
+            READY_AT.put(id, now + Math.round(COOLDOWN_TICKS * (1.0 - START_CHARGE)));
+            READY_AT2.put(id, now + Math.round(COOLDOWN2_TICKS * (1.0 - START_CHARGE)));
+        }
+        Long pending = PENDING2.get(id);
+        if (pending != null && now >= pending) {
+            PENDING2.remove(id);
+            applyPower2(player);
         }
 
         // Re-sync once a second (also covers joining, respawning and new rounds).
@@ -118,6 +145,7 @@ public final class PowerManager {
 
     public static void onLogout(PlayerEvent.PlayerLoggedOutEvent event) {
         UUID id = event.getEntity().getUUID();
+        PENDING2.remove(id);
         READY_AT.remove(id);
         READY_AT2.remove(id);
         ACTIVE_UNTIL2.remove(id);

@@ -73,6 +73,24 @@ public final class GeneratorManager {
         );
     }
 
+    private static final java.util.Map<UUID, Double> WRENCH_WEAR = new java.util.HashMap<>();
+
+    /** The wrench loses 1.75 durability per second of repair (0.0875 per tick, accumulated). */
+    private static void wearWrench(Player player) {
+        double wear = WRENCH_WEAR.merge(player.getUUID(), 1.75 / 20.0, Double::sum);
+        if (wear < 1.0) return;
+        int points = (int) wear;
+        WRENCH_WEAR.put(player.getUUID(), wear - points);
+        ItemStack stack = player.getMainHandItem();
+        int next = stack.getDamageValue() + points;
+        if (next >= stack.getMaxDamage()) {
+            player.setItemInHand(net.minecraft.world.InteractionHand.MAIN_HAND, ItemStack.EMPTY);
+            player.displayClientMessage(Component.literal("Гайковий ключ зламався!"), true);
+        } else {
+            stack.setDamageValue(next);
+        }
+    }
+
     public static void onPlayerTick(TickEvent.PlayerTickEvent.Post event) {
         Player player = event.player();
         if (!(player instanceof ServerPlayer serverPlayer)
@@ -105,13 +123,15 @@ public final class GeneratorManager {
             REFUELING.remove(playerId);
             if (generator.strength < 100.0) {
                 long gameTime = level.getGameTime();
+                boolean wrench = player.getMainHandItem().is(ManikItems.WRENCH.get());
+                if (wrench) wearWrench(player);
                 // Prevent two players targeting the same generator from adding
                 // multiple strength ticks during the same server tick.
                 if (generator.lastStrengthGameTime != gameTime) {
                     generator.lastStrengthGameTime = gameTime;
                     generator.strengthTicks++;
                     if (generator.strengthTicks >= 20) {
-                        generator.strength = Math.min(100.0, generator.strength + 1.0);
+                        generator.strength = Math.min(100.0, generator.strength + (wrench ? 2.0 : 1.0));
                         generator.strengthTicks = 0;
                         if (GameCommands.areAllGeneratorsReady(level) && GameCommands.markReadyAnnounced()) {
                             level.getServer().getPlayerList().broadcastSystemMessage(

@@ -47,6 +47,7 @@ public final class ManikMod {
                         output.accept(ManikItems.MACADAMIA.get());
                         output.accept(ManikItems.CROWBAR.get());
                         output.accept(ManikItems.STUN_GUN.get());
+                        output.accept(ManikItems.WRENCH.get());
                         output.accept(ManikItems.TRIPWIRE.get());
                         output.accept(ManikItems.MARK_GLOVE.get());
                     }).build());
@@ -63,6 +64,7 @@ public final class ManikMod {
             JumpscareHud.register();
             CarryHud.register();
             CarryRender.register();
+            CinematicHud.register();
         }
         RegisterCommandsEvent.BUS.addListener(GameCommands::onRegisterCommands);
         BlockEvent.EntityPlaceEvent.BUS.addListener(SpawnPointManager::onBlockPlace);
@@ -90,6 +92,7 @@ public final class ManikMod {
         TickEvent.PlayerTickEvent.Post.BUS.addListener(ManiacBodyManager::onPlayerTick);
         TickEvent.PlayerTickEvent.Post.BUS.addListener(PowerManager::onPlayerTick);
         TickEvent.ServerTickEvent.Post.BUS.addListener(ExitManager::onServerTick);
+        TickEvent.ServerTickEvent.Post.BUS.addListener(CinematicManager::onServerTick);
         TickEvent.ServerTickEvent.Post.BUS.addListener(TripwireManager::onServerTick);
         TickEvent.ServerTickEvent.Post.BUS.addListener(ShockManager::onServerTick);
         net.minecraftforge.event.entity.living.LivingEvent.LivingJumpEvent.BUS.addListener(TripwireManager::onLivingJump);

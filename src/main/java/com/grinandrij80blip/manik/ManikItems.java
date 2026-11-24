@@ -42,5 +42,11 @@ public final class ManikItems {
                     .setId(ITEMS.key("macadamia"))
                     .stacksTo(16)));
 
+    public static final RegistryObject<Item> WRENCH = ITEMS.register("wrench",
+            () -> new Item(new Item.Properties()
+                    .setId(ITEMS.key("wrench"))
+                    .durability(100)
+                    .stacksTo(1)));
+
     private ManikItems() {}
 }
