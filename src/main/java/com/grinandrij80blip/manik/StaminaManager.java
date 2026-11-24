@@ -53,6 +53,7 @@ public final class StaminaManager {
         long exhaustedUntil;
         long jumpBlockedUntil;
         long stunnedUntil;
+        long frozenUntil;
         int lastSentStamina = -1;
         int lastSentExhaustion = -1;
         int lastSentJumpBlocked = -1;
@@ -65,6 +66,27 @@ public final class StaminaManager {
     public static boolean isStunned(ServerPlayer player) {
         StaminaState state = STATES.get(player.getUUID());
         return state != null && player.level().getGameTime() < state.stunnedUntil;
+    }
+
+    /** True while the maniac is frozen casting power 2 (not a stun: can still be hit). */
+    public static boolean isFrozen(ServerPlayer player) {
+        StaminaState state = STATES.get(player.getUUID());
+        return state != null && player.level().getGameTime() < state.frozenUntil;
+    }
+
+    /** The maniac cannot attack, place traps or use items/powers. */
+    public static boolean isDisabled(ServerPlayer player) {
+        return isStunned(player) || isFrozen(player);
+    }
+
+    /** Freezes in place (no move, no jump) without counting as a stun. */
+    public static void freezeKiller(ServerPlayer killer, int ticks) {
+        StaminaState state = STATES.computeIfAbsent(killer.getUUID(), ignored -> new StaminaState());
+        long now = killer.level().getGameTime();
+        state.frozenUntil = now + ticks;
+        state.jumpBlockedUntil = Math.max(state.jumpBlockedUntil, now + ticks);
+        killer.setSprinting(false);
+        killer.addEffect(new MobEffectInstance(MobEffects.SLOWNESS, ticks, 255, false, true, true));
     }
 
     /**

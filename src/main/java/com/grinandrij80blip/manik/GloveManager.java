@@ -36,7 +36,7 @@ public final class GloveManager {
 
         // A maniac cannot use an empty hand or any other item to attack.
         if (killer) {
-            if (StaminaManager.isStunned(attacker)) {
+            if (StaminaManager.isDisabled(attacker)) {
                 attacker.displayClientMessage(
                         Component.literal("Ти оглушений і не можеш атакувати."), true);
                 return true;

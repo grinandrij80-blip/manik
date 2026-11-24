@@ -51,7 +51,7 @@ public final class TrapManager {
                 return true;
             }
 
-            if (StaminaManager.isStunned(player)) {
+            if (StaminaManager.isDisabled(player)) {
                 player.displayClientMessage(Component.literal("Ти оглушений і не можеш ставити капкани."), true);
                 return true;
             }

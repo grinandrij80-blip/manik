@@ -44,7 +44,7 @@ public final class PowerManager {
     }
 
     public static void activate(ServerPlayer player, int slot) {
-        if (!isManiac(player) || StaminaManager.isStunned(player)) return;
+        if (!isManiac(player) || StaminaManager.isDisabled(player)) return;
         long now = player.level().getGameTime();
 
         if (slot == 0) {
@@ -58,7 +58,7 @@ public final class PowerManager {
             if (left(READY_AT2, player) > 0 || PENDING2.containsKey(player.getUUID())) return;
             READY_AT2.put(player.getUUID(), now + COOLDOWN2_TICKS);
             PENDING2.put(player.getUUID(), now + FREEZE2_TICKS);
-            StaminaManager.stunKiller(player, FREEZE2_TICKS);
+            StaminaManager.freezeKiller(player, FREEZE2_TICKS);
         }
         sync(player);
     }
@@ -120,7 +120,12 @@ public final class PowerManager {
             READY_AT2.put(id, now + Math.round(COOLDOWN2_TICKS * (1.0 - START_CHARGE)));
         }
         Long pending = PENDING2.get(id);
-        if (pending != null && now >= pending) {
+        if (pending != null && StaminaManager.isStunned(player)) {
+            // Stunned while casting: the power fizzles but the cooldown is spent.
+            PENDING2.remove(id);
+            player.displayClientMessage(net.minecraft.network.chat.Component.literal("Чаклування збито!"), true);
+            sync(player);
+        } else if (pending != null && now >= pending) {
             PENDING2.remove(id);
             applyPower2(player);
         }

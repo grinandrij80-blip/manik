@@ -65,7 +65,7 @@ public final class TripwireManager {
             player.displayClientMessage(Component.literal("Розтяжку може ставити лише маніяк під час раунду."), true);
             return;
         }
-        if (StaminaManager.isStunned(player)) {
+        if (StaminaManager.isDisabled(player)) {
             player.displayClientMessage(Component.literal("Ти оглушений і не можеш ставити розтяжку."), true);
             return;
         }
