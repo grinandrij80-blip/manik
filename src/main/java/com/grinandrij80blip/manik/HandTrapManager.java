@@ -26,7 +26,7 @@ import java.util.UUID;
 public final class HandTrapManager {
     public static final int COOLDOWN_TICKS = 40 * 20;
     private static final double TRIGGER_RADIUS = 1.75D;
-    private static final double HOLD_RADIUS = 0.6D;
+    private static final double HOLD_RADIUS = 3.0D;
     private static final int MIN_ESCAPE_TICKS = 40;
 
     private static final Set<BlockPos> HANDS = new HashSet<>();
@@ -169,7 +169,7 @@ public final class HandTrapManager {
         double dx = p.getX() - cx, dz = p.getZ() - cz;
         double dist = Math.sqrt(dx * dx + dz * dz);
         if (dist > HOLD_RADIUS) {
-            double k = (HOLD_RADIUS - 0.05) / dist;
+            double k = (HOLD_RADIUS - 0.1) / dist;
             p.teleportTo(activeLevel, cx + dx * k, p.getY(), cz + dz * k,
                     Set.of(), p.getYRot(), p.getXRot(), true);
         }
