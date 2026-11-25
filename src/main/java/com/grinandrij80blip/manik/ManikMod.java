@@ -43,6 +43,7 @@ public final class ManikMod {
                         output.accept(ManikBlocks.EXIT_SPAWN_ITEM.get());
                         output.accept(ManikBlocks.ROUND_LEVER_ITEM.get());
                         output.accept(ManikBlocks.TRAP_ITEM.get());
+                        output.accept(ManikBlocks.HAND_TRAP_ITEM.get());
                         output.accept(ManikItems.MEDKIT.get());
                         output.accept(ManikItems.MACADAMIA.get());
                         output.accept(ManikItems.CROWBAR.get());
@@ -67,6 +68,7 @@ public final class ManikMod {
             CarryRender.register();
             CinematicHud.register();
             WheelHud.register();
+            HandTrapClient.register();
         }
         RegisterCommandsEvent.BUS.addListener(GameCommands::onRegisterCommands);
         BlockEvent.EntityPlaceEvent.BUS.addListener(SpawnPointManager::onBlockPlace);
@@ -75,6 +77,10 @@ public final class ManikMod {
         BlockEvent.BreakEvent.BUS.addListener(
                 (java.util.function.Predicate<BlockEvent.BreakEvent>) TrapManager::onBlockBreak);
         BlockEvent.BreakEvent.BUS.addListener(SpawnPointManager::onBlockBreak);
+        BlockEvent.EntityPlaceEvent.BUS.addListener(
+                (java.util.function.Predicate<BlockEvent.EntityPlaceEvent>) HandTrapManager::onBlockPlace);
+        BlockEvent.BreakEvent.BUS.addListener(
+                (java.util.function.Predicate<BlockEvent.BreakEvent>) HandTrapManager::onBlockBreak);
         ChunkEvent.Load.BUS.addListener(SpawnPointManager::onChunkLoad);
         net.minecraftforge.event.entity.player.EntityItemPickupEvent.BUS.addListener(
                 (java.util.function.Predicate<net.minecraftforge.event.entity.player.EntityItemPickupEvent>) PickupGuard::onPickup);

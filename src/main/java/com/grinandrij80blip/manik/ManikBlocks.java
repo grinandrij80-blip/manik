@@ -54,6 +54,10 @@ public final class ManikBlocks {
             () -> new ManikTrapBlock(BlockBehaviour.Properties.of().setId(BLOCKS.key("trap"))
                     .mapColor(MapColor.COLOR_GRAY).strength(-1.0F).noOcclusion()));
 
+    public static final RegistryObject<ManikHandTrapBlock> HAND_TRAP = BLOCKS.register("hand_trap",
+            () -> new ManikHandTrapBlock(BlockBehaviour.Properties.of().setId(BLOCKS.key("hand_trap"))
+                    .mapColor(MapColor.COLOR_GRAY).strength(-1.0F).noOcclusion().noCollision()));
+
     public static final RegistryObject<Item> ITEM_SPAWN_ITEM = ITEMS.register("item_spawn",
             () -> new BlockItem(ITEM_SPAWN.get(), new Item.Properties().setId(ITEMS.key("item_spawn"))));
     public static final RegistryObject<Item> GENERATOR_SPAWN_ITEM = ITEMS.register("generator_spawn",
@@ -82,6 +86,10 @@ public final class ManikBlocks {
     public static final RegistryObject<Item> TRAP_ITEM = ITEMS.register("trap",
             () -> new ManikTrapItem(TRAP.get(), new Item.Properties()
                     .setId(ITEMS.key("trap")).stacksTo(16)));
+
+    public static final RegistryObject<Item> HAND_TRAP_ITEM = ITEMS.register("hand_trap",
+            () -> new ManikTrapItem(HAND_TRAP.get(), new Item.Properties()
+                    .setId(ITEMS.key("hand_trap")).stacksTo(16)));
 
     private ManikBlocks() {}
 }

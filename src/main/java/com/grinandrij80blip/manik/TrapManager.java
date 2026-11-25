@@ -215,6 +215,7 @@ public final class TrapManager {
                 && activeLevel != null
                 && player.level() == activeLevel
                 && player.getTags().contains("manik_survivor")
+                && player.isAlive() && !player.isSpectator()
                 && !TRAPPED_PLAYERS.containsKey(playerId)) {
             BlockPos touchingTrap = findTouchingTrap(player);
             if (touchingTrap != null) {
@@ -259,6 +260,7 @@ public final class TrapManager {
                 || !GameConfig.isRunning()
                 || activeLevel != serverLevel
                 || !player.getTags().contains("manik_survivor")
+                || !player.isAlive() || player.isSpectator()
                 || !serverLevel.getBlockState(pos).is(ManikBlocks.TRAP.get())
                 || TRAPPED_PLAYERS.containsKey(player.getUUID())) {
             return;

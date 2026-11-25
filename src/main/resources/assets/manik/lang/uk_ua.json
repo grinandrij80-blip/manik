@@ -13,6 +13,8 @@
   "item.manik.exit_door": "Спеціальні двері виходу",
   "item.manik.medkit": "Аптечка",
   "item.manik.crowbar": "Лом",
+  "block.manik.hand_trap": "Рука-пастка",
+  "item.manik.hand_trap": "Рука-пастка",
   "block.manik.trap": "Капкан",
   "item.manik.trap": "Капкан",
   "entity.manik.maniac_body": "Маніяк",

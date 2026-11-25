@@ -26,13 +26,15 @@ public final class ManikNetwork {
     public static final int CINEMATIC_MENU_CLOSE = 5;
     private record ManiacChoicePacket(int type) {}
     private record WheelPacket(int result) {}
+    private record GrabPacket(boolean grabbed) {}
+    private record HandEscapePacket() {}
     private record CinematicPacket(int type, int value) {}
 
     private record PowerRequestPacket(int slot) {}
     private record PowerSyncPacket(int cooldown1, int active1, int cooldown2, int active2, boolean enabled, int type) {}
 
     private static final SimpleChannel CHANNEL =
-            ChannelBuilder.named("manik:main").networkProtocolVersion(13).simpleChannel();
+            ChannelBuilder.named("manik:main").networkProtocolVersion(14).simpleChannel();
 
     private static final StreamCodec<RegistryFriendlyByteBuf, UseInputPacket> USE_INPUT_CODEC =
             StreamCodec.of(
@@ -71,6 +73,14 @@ public final class ManikNetwork {
             StreamCodec.of(
                     (buffer, packet) -> buffer.writeVarInt(packet.kind()),
                     buffer -> new JumpscarePacket(buffer.readVarInt()));
+
+    private static final StreamCodec<RegistryFriendlyByteBuf, GrabPacket> GRAB_CODEC =
+            StreamCodec.of(
+                    (buffer, packet) -> buffer.writeBoolean(packet.grabbed()),
+                    buffer -> new GrabPacket(buffer.readBoolean()));
+
+    private static final StreamCodec<RegistryFriendlyByteBuf, HandEscapePacket> ESCAPE_CODEC =
+            StreamCodec.of((buffer, packet) -> {}, buffer -> new HandEscapePacket());
 
     private static final StreamCodec<RegistryFriendlyByteBuf, WheelPacket> WHEEL_CODEC =
             StreamCodec.of(
@@ -129,6 +139,10 @@ public final class ManikNetwork {
                     ServerPlayer sender = context.getSender();
                     if (sender != null) GeneratorManager.setUseInputHeld(sender, packet.held());
                 })
+                .addMain(HandEscapePacket.class, ESCAPE_CODEC, (packet, context) -> {
+                    ServerPlayer sender = context.getSender();
+                    if (sender != null) HandTrapManager.onEscape(sender);
+                })
                 .addMain(ManiacChoicePacket.class, CHOICE_CODEC, (packet, context) -> {
                     ServerPlayer sender = context.getSender();
                     if (sender != null) ManiacSelection.choose(sender, packet.type());
@@ -157,6 +171,8 @@ public final class ManikNetwork {
                         (packet, context) -> CarryState.setCarrierId(packet.entityId()))
                 .addMain(CinematicPacket.class, CINEMATIC_CODEC,
                         (packet, context) -> CinematicHud.handle(packet.type(), packet.value()))
+                .addMain(GrabPacket.class, GRAB_CODEC,
+                        (packet, context) -> HandTrapClient.setGrabbed(packet.grabbed()))
                 .addMain(WheelPacket.class, WHEEL_CODEC,
                         (packet, context) -> WheelHud.start(packet.result()))
                 .addMain(JumpscarePacket.class, JUMPSCARE_CODEC,
@@ -200,6 +216,14 @@ public final class ManikNetwork {
 
     public static void sendCinematic(ServerPlayer player, int type, int value) {
         CHANNEL.send(new CinematicPacket(type, value), PacketDistributor.PLAYER.with(player));
+    }
+
+    public static void sendGrab(ServerPlayer player, boolean grabbed) {
+        CHANNEL.send(new GrabPacket(grabbed), PacketDistributor.PLAYER.with(player));
+    }
+
+    public static void sendHandEscape() {
+        CHANNEL.send(new HandEscapePacket(), PacketDistributor.SERVER.noArg());
     }
 
     public static void sendWheel(ServerPlayer player, int result) {

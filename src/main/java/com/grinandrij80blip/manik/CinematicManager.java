@@ -77,6 +77,7 @@ public final class CinematicManager {
         MinecraftServer server = event.server();
         ManiacSelection.onServerTick(server);
         ClownManager.onServerTick(server);
+        HandTrapManager.onServerTick(server);
         if (startAction != null && --startLeft <= 0) {
             Runnable action = startAction;
             startAction = null;

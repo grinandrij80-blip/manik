@@ -178,6 +178,7 @@ public final class GameCommands {
         ACTIVE_ITEMS.clear();
         GloveManager.resetRound();
         TrapManager.beginRound(level);
+        HandTrapManager.beginRound(level);
         TripwireManager.clearAll(server);
         List<BlockPos> generatorSpawns = SpawnPointManager.get(level, SpawnPointManager.Type.GENERATOR);
         Collections.shuffle(generatorSpawns);
@@ -232,6 +233,7 @@ public final class GameCommands {
                 if (player.getInventory().getItem(slot).is(ManikBlocks.TRAP_ITEM.get())
                         || player.getInventory().getItem(slot).is(ManikItems.MARK_GLOVE.get())
                         || player.getInventory().getItem(slot).is(ManikItems.CLOWN_HAMMER.get())
+                        || player.getInventory().getItem(slot).is(ManikBlocks.HAND_TRAP_ITEM.get())
                         || player.getInventory().getItem(slot).is(ManikItems.TRIPWIRE.get())) {
                     player.getInventory().setItem(slot, net.minecraft.world.item.ItemStack.EMPTY);
                 }
@@ -267,6 +269,21 @@ public final class GameCommands {
                                 "Тобі видано циркову кувалду: влучання знімає 8 HP (4 серця). Перезарядка: 12 секунд."));
                     } else {
                         player.sendSystemMessage(Component.literal("Немає вільного місця для кувалди!"));
+                    }
+                    int handSlot = -1;
+                    for (int slot = 0; slot < 36; slot++) {
+                        if (player.getInventory().getItem(slot).isEmpty()) {
+                            handSlot = slot;
+                            break;
+                        }
+                    }
+                    if (handSlot >= 0) {
+                        player.getInventory().setItem(handSlot,
+                                new net.minecraft.world.item.ItemStack(ManikBlocks.HAND_TRAP_ITEM.get()));
+                        player.sendSystemMessage(Component.literal(
+                                "Тобі видано руку-пастку: став її в землю, вона схопить виживших поруч."));
+                    } else {
+                        player.sendSystemMessage(Component.literal("Немає вільного місця для руки-пастки!"));
                     }
                 } else {
                 int gloveSlot = -1;
@@ -349,6 +366,7 @@ public final class GameCommands {
         ShockManager.clearAll();
         ServerLevel cleanupLevel = activeLevel;
         TrapManager.clearAll(cleanupLevel);
+        HandTrapManager.clearAll(cleanupLevel);
         if (cleanupLevel != null) {
             for (UUID itemId : ACTIVE_ITEMS) {
                 net.minecraft.world.entity.Entity entity = cleanupLevel.getEntity(itemId);

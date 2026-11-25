@@ -13,6 +13,8 @@
   "item.manik.exit_door": "Special Exit Door",
   "item.manik.medkit": "Medkit",
   "item.manik.crowbar": "Crowbar",
+  "block.manik.hand_trap": "Hand trap",
+  "item.manik.hand_trap": "Hand trap",
   "block.manik.trap": "Trap",
   "item.manik.trap": "Trap",
   "entity.manik.maniac_body": "Maniac",

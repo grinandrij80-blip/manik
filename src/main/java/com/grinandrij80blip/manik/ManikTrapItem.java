@@ -10,7 +10,7 @@ import net.minecraft.world.item.context.UseOnContext;
  * cooldown but restores the one item consumed by vanilla BlockItem placement.
  */
 public final class ManikTrapItem extends BlockItem {
-    public ManikTrapItem(ManikTrapBlock block, Properties properties) {
+    public ManikTrapItem(net.minecraft.world.level.block.Block block, Properties properties) {
         super(block, properties);
     }
 

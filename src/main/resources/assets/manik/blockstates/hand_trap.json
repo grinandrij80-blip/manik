@@ -1,0 +1,10 @@
+{
+  "variants": {
+    "extended=false": {
+      "model": "manik:block/hand_trap"
+    },
+    "extended=true": {
+      "model": "manik:block/hand_trap_open"
+    }
+  }
+}
