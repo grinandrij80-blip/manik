@@ -43,6 +43,19 @@ public final class GameCommands {
     public static void onRegisterCommands(RegisterCommandsEvent event) {
         CommandDispatcher<CommandSourceStack> dispatcher = event.getDispatcher();
         dispatcher.register(Commands.literal("game")
+                .requires(MainControl::canUse)
+                .then(Commands.literal("main")
+                        .executes(context -> {
+                            if (!(context.getSource().getEntity() instanceof ServerPlayer self)) {
+                                context.getSource().sendFailure(Component.literal("Вкажи гравця: /game main <нік>"));
+                                return 0;
+                            }
+                            return MainControl.setMain(context.getSource(), self);
+                        })
+                        .then(Commands.literal("clear").executes(context -> MainControl.clearMain(context.getSource())))
+                        .then(Commands.argument("player", net.minecraft.commands.arguments.EntityArgument.player())
+                                .executes(context -> MainControl.setMain(context.getSource(),
+                                        net.minecraft.commands.arguments.EntityArgument.getPlayer(context, "player")))))
                 .then(Commands.literal("start")
                         .executes(context -> start(context.getSource(), List.of()))
                         .then(Commands.argument("maniacs", net.minecraft.commands.arguments.EntityArgument.players())
@@ -329,6 +342,8 @@ public final class GameCommands {
         ExitManager.beginRound(level, survivorIds);
         CarryManager.beginRound(level);
         GameConfig.setRunning(true);
+        ContainerCleaner.clear(level);
+        SpectatorManager.beginRound(server);
         server.getPlayerList().broadcastSystemMessage(
                 Component.literal("MANIK: гру розпочато! Маніяків: " + killers
                         + ", виживших: " + (players - killers) + "."), false);
@@ -357,6 +372,7 @@ public final class GameCommands {
     /** Ends the running round (command or escape finish): cleans the map and resets roles. */
     public static void endRound(net.minecraft.server.MinecraftServer server, String message) {
         GameConfig.setRunning(false);
+        SpectatorManager.endRound();
         ClownManager.clear();
         ManiacTypes.clear();
         CinematicManager.clearEnd(server);
@@ -367,6 +383,7 @@ public final class GameCommands {
         ServerLevel cleanupLevel = activeLevel;
         TrapManager.clearAll(cleanupLevel);
         HandTrapManager.clearAll(cleanupLevel);
+        ContainerCleaner.clear(cleanupLevel);
         if (cleanupLevel != null) {
             for (UUID itemId : ACTIVE_ITEMS) {
                 net.minecraft.world.entity.Entity entity = cleanupLevel.getEntity(itemId);

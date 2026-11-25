@@ -26,7 +26,7 @@ import java.util.UUID;
 public final class HandTrapManager {
     public static final int COOLDOWN_TICKS = 40 * 20;
     private static final double TRIGGER_RADIUS = 1.75D;
-    private static final double HOLD_RADIUS = 3.0D;
+    private static final double HOLD_RADIUS = 2.5D;
     private static final int MIN_ESCAPE_TICKS = 40;
 
     private static final Set<BlockPos> HANDS = new HashSet<>();

@@ -78,6 +78,7 @@ public final class CinematicManager {
         ManiacSelection.onServerTick(server);
         ClownManager.onServerTick(server);
         HandTrapManager.onServerTick(server);
+        SpectatorManager.onServerTick(server);
         if (startAction != null && --startLeft <= 0) {
             Runnable action = startAction;
             startAction = null;
