@@ -8,6 +8,8 @@ public final class ManiacBodyRenderState extends LivingEntityRenderState {
     public float walkSpeed;
     /** Progress of the current claw swing, 0 when idle. */
     public float attack;
+    /** 0 standing .. 1 fully crouched. */
+    public float crouch;
     /** True when the local player is this maniac and looks through their own eyes. */
     public boolean hiddenFromOwner;
 }

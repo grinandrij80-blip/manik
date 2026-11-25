@@ -64,7 +64,8 @@ public final class CinematicManager {
     }
 
     public static void sendRole(ServerPlayer player, boolean maniac) {
-        ManikNetwork.sendCinematic(player, ManikNetwork.CINEMATIC_FADE_IN, maniac ? 0 : 1);
+        ManikNetwork.sendCinematic(player, ManikNetwork.CINEMATIC_FADE_IN,
+                maniac ? (ManiacTypes.isClown(player) ? 2 : 0) : 1);
     }
 
     private static void broadcast(MinecraftServer server, int type, int value) {

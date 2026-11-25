@@ -25,6 +25,9 @@ public class ManiacBodyEntity extends LivingEntity {
     public float animPosO;
     public float animSpeed;
     public float animSpeedO;
+    /** 0..1, smoothly follows whether the owner is crouching. */
+    public float crouch;
+    public float crouchO;
 
     public ManiacBodyEntity(EntityType<? extends ManiacBodyEntity> type, Level level) {
         super(type, level);
@@ -80,6 +83,10 @@ public class ManiacBodyEntity extends LivingEntity {
             }
         }
 
+        this.crouchO = this.crouch;
+        Entity crouchOwner = this.getOwner();
+        float crouchTarget = crouchOwner != null && crouchOwner.isCrouching() ? 1.0F : 0.0F;
+        this.crouch += (crouchTarget - this.crouch) * 0.35F;
         this.animPosO = this.animPos;
         this.animSpeedO = this.animSpeed;
         super.tick();

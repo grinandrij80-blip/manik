@@ -9,7 +9,7 @@ import net.minecraft.network.chat.Component;
 /** 10-second choice between the two maniacs, shown as two rectangular cards. */
 public final class ManiacSelectScreen extends Screen {
     private static final String[][] INFO = {
-            {"МАНІЯК", "Спо1: Ривок — швидкість, стрибок", "Спо2: Око — сліпота виживших", "Зброя: Ніж", "Пастки: Капкан, розтяжка"},
+            {"НЕКРОМАНТ", "Спо1: Ривок — швидкість, стрибок", "Спо2: Око — сліпота виживших", "Зброя: Ніж некроманта", "Пастки: Капкан, розтяжка"},
             {"КЛОУН", "Спо1: Невидимість до удару", "Спо2: Коробка з сюрпризом", "Зброя: Циркова кувалда", "Пастки: Капкан, рука"},
     };
     private static final int[] ACCENT = {0xC21B1B, 0xB0388C};
@@ -52,7 +52,7 @@ public final class ManiacSelectScreen extends Screen {
         float t = (System.nanoTime() - startNanos) / 50_000_000.0F;
         g.fill(0, 0, this.width, this.height, 0xE6060306);
         Minecraft mc = Minecraft.getInstance();
-        String title = "ОБЕРИ МАНІЯКА";
+        String title = "ОБЕРИ СВОГО МАНІЯКА";
         g.drawString(mc.font, title, (this.width - mc.font.width(title)) / 2, cardY() - 18, 0xFFFFFFFF);
 
         for (int i = 0; i < 2; i++) {

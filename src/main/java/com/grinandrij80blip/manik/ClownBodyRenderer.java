@@ -44,6 +44,7 @@ public final class ClownBodyRenderer
         state.walkSpeed = Mth.lerp(partialTick, entity.animSpeedO, entity.animSpeed);
         state.attack = entity.getAttackAnim(partialTick);
         state.hiddenFromOwner = false;
+        state.crouch = Mth.lerp(partialTick, entity.crouchO, entity.crouch);
 
         Entity owner = entity.getOwner();
         if (owner instanceof LivingEntity player) {

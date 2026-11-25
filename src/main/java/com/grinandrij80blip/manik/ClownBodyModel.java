@@ -106,34 +106,52 @@ public final class ClownBodyModel extends EntityModel<ManiacBodyRenderState> {
     public void setupAnim(ManiacBodyRenderState state) {
         super.setupAnim(state);
 
+        float crouch = state.crouch;
         float speed = Math.min(1.0F, state.walkSpeed);
         float cycle = state.walkPos * 0.6F;
         float age = state.ageInTicks;
-        float attack = state.attack;
-        float swing = attack > 0.0F ? Mth.sin(attack * (float) Math.PI) : 0.0F;
+        float t = state.attack;
+        float idle = 1.0F - Math.min(1.0F, speed * 4.0F);
         float breathe = Mth.sin(age * 0.06F);
+        float stride = 1.0F - 0.45F * crouch;
 
-        this.chest.xRot = 0.55F + breathe * 0.03F + swing * 0.5F;
-        this.chest.yRot = attack > 0.0F ? Mth.sin(Mth.sqrt(attack) * (float) Math.PI * 2.0F) * 0.3F : 0.0F;
+        // Long loose legs: hips dip each step and sink when crouching.
+        float bob = Math.abs(Mth.cos(cycle)) * speed * 1.1F;
+        float hipY = -3.0F + bob + crouch * 3.3F;
+        this.torso.y = hipY;
+        this.legR.y = -3.0F + crouch * 3.3F;
+        this.legL.y = -3.0F + crouch * 3.3F;
+        // Lanky sway side to side while walking, like a puppet on strings.
+        this.torso.zRot = Mth.cos(cycle) * 0.08F * speed;
 
-        // Creepy tilt of the head on top of looking where the player looks.
-        this.head.xRot = -0.3F + state.xRot * DEG * 0.6F - swing * 0.2F;
-        this.head.yRot = Mth.clamp(state.yRot, -70.0F, 70.0F) * DEG - this.chest.yRot * 0.6F;
-        this.head.zRot = Mth.sin(age * 0.05F) * 0.07F;
-
-        float armSwingR = Mth.cos(cycle + (float) Math.PI) * 0.5F * speed;
-        float armSwingL = Mth.cos(cycle) * 0.5F * speed;
-        float sway = Mth.sin(age * 0.07F) * 0.04F;
-        // The mallet arm lifts overhead and slams down on an attack.
-        this.armR.xRot = -0.15F + armSwingR - swing * 3.0F;
-        this.armL.xRot = -0.15F + armSwingL - swing * 1.2F;
-        this.armR.zRot = 0.08F + sway;
-        this.armL.zRot = -0.08F - sway;
-        this.foreR.xRot = -0.2F - swing * 0.6F - Math.abs(armSwingR) * 0.3F;
-        this.foreL.xRot = -0.2F - swing * 0.4F - Math.abs(armSwingL) * 0.3F;
-
-        this.legR.xRot = Mth.cos(cycle) * 1.0F * speed;
-        this.legL.xRot = Mth.cos(cycle + (float) Math.PI) * 1.0F * speed;
+        float swingLean = ManiacAnim.lean(t, -0.2F, 0.6F);
+        this.chest.xRot = 0.55F + breathe * 0.03F + speed * 0.1F + crouch * 0.5F + swingLean;
+        this.chest.yRot = t > 0.0F ? Mth.sin(Mth.sqrt(t) * (float) Math.PI * 2.0F) * 0.35F
+                : Mth.cos(cycle) * 0.1F * speed;
         this.torso.yRot = this.chest.yRot * -0.3F;
+
+        // Creepy head: tilts, follows the player's gaze, glances around when idle, nods when walking.
+        float glance = Mth.sin(age * 0.03F) * 0.2F * idle;
+        this.head.xRot = -0.3F - crouch * 0.2F + state.xRot * DEG * 0.6F - Math.max(0.0F, swingLean) * 0.25F
+                + Mth.sin(cycle * 2.0F) * 0.06F * speed;
+        this.head.yRot = Mth.clamp(state.yRot, -70.0F, 70.0F) * DEG - this.chest.yRot * 0.6F + glance;
+        this.head.zRot = Mth.sin(age * 0.05F) * 0.07F + Mth.cos(cycle) * 0.08F * speed;
+
+        float armSwingR = Mth.cos(cycle + (float) Math.PI) * 0.5F * speed * stride;
+        float armSwingL = Mth.cos(cycle) * 0.5F * speed * stride;
+        float sway = Mth.sin(age * 0.07F) * 0.05F * idle;
+        // The mallet arm winds up overhead and slams down; the free arm flails for balance.
+        float slamR = ManiacAnim.armAngle(t, -3.0F, -0.8F);
+        float slamL = ManiacAnim.armAngle(t, -1.2F, -0.3F);
+        this.armR.xRot = -0.15F - crouch * 0.3F + armSwingR + slamR;
+        this.armL.xRot = -0.15F - crouch * 0.3F + armSwingL + slamL;
+        this.armR.zRot = 0.08F + sway + Math.abs(armSwingR) * 0.08F;
+        this.armL.zRot = -0.08F - sway - Math.abs(armSwingL) * 0.08F - Math.abs(slamL) * 0.2F;
+        this.foreR.xRot = -0.2F - Math.abs(slamR) * 0.2F - Math.abs(armSwingR) * 0.3F - breathe * 0.04F;
+        this.foreL.xRot = -0.2F - Math.abs(slamL) * 0.3F - Math.abs(armSwingL) * 0.3F + breathe * 0.04F;
+
+        float legSwing = 1.0F * speed * stride;
+        this.legR.xRot = Mth.cos(cycle) * legSwing - crouch * 0.4F;
+        this.legL.xRot = Mth.cos(cycle + (float) Math.PI) * legSwing + crouch * 0.4F;
     }
 }

@@ -90,10 +90,12 @@ public final class CinematicHud {
         if (bannerT >= 0.0F && bannerT <= bannerLen) {
             float alpha = Math.min(smooth(bannerT / 5.0F), smooth((bannerLen - bannerT) / 6.0F));
             if (mode == FADE_IN) {
-                boolean maniac = value == 0;
-                if (value <= 1) banner(g, mc, w, h, maniac ? "ТИ — МАНІЯК" : "ТИ — ВИЖИВШИЙ",
+                boolean maniac = value != 1;
+                String role = value == 0 ? "ТИ — НЕКРОМАНТ" : value == 2 ? "ТИ — КЛОУН" : "ТИ — ВИЖИВШИЙ";
+                int accent = value == 2 ? 0xB0388C : maniac ? 0xC21B1B : 0x2FBF8F;
+                banner(g, mc, w, h, role,
                         maniac ? "Знайди і спіймай усіх" : "Запусти генератори і втечи",
-                        maniac ? 0xC21B1B : 0x2FBF8F, maniac ? 0x1A0505 : 0x04160F, alpha);
+                        accent, maniac ? 0x1A0505 : 0x04160F, alpha);
             } else if (mode == WIN) {
                 boolean maniacWon = value == CinematicManager.WINNER_MANIAC;
                 banner(g, mc, w, h, maniacWon ? "МАНІЯК ПЕРЕМІГ" : "ВИЖИВШІ ПЕРЕМОГЛИ",
