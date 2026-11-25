@@ -27,8 +27,9 @@ public final class MainControl {
 
     public static int setMain(CommandSourceStack source, ServerPlayer target) {
         boolean isMain = source.getEntity() instanceof ServerPlayer p && p.getTags().contains(TAG);
-        if (!isMain && !source.hasPermission(2)) {
-            source.sendFailure(Component.literal("Призначити головного може лише оператор або поточний головний."));
+        boolean console = !(source.getEntity() instanceof ServerPlayer);
+        if (!isMain && !console && anyMainOnline(source)) {
+            source.sendFailure(Component.literal("Призначити головного може лише поточний головний."));
             return 0;
         }
         for (ServerPlayer player : source.getServer().getPlayerList().getPlayers()) {
@@ -43,8 +44,9 @@ public final class MainControl {
 
     public static int clearMain(CommandSourceStack source) {
         boolean isMain = source.getEntity() instanceof ServerPlayer p && p.getTags().contains(TAG);
-        if (!isMain && !source.hasPermission(2)) {
-            source.sendFailure(Component.literal("Зняти головного може лише оператор або сам головний."));
+        boolean console = !(source.getEntity() instanceof ServerPlayer);
+        if (!isMain && !console && anyMainOnline(source)) {
+            source.sendFailure(Component.literal("Зняти головного може лише сам головний."));
             return 0;
         }
         for (ServerPlayer player : source.getServer().getPlayerList().getPlayers()) {
