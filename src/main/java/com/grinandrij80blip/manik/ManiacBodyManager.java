@@ -30,13 +30,17 @@ public final class ManiacBodyManager {
 
         if (!maniac) {
             removeBody(player);
+            ClownManager.remove(id);
             return;
         }
 
+        boolean clown = ManiacTypes.isClown(player);
         ManiacBodyEntity body = BODIES.get(id);
-        if (body == null || body.isRemoved() || body.level() != level) {
+        if (body == null || body.isRemoved() || body.level() != level
+                || (body instanceof ClownBodyEntity) != clown) {
             if (body != null) body.discard();
-            body = new ManiacBodyEntity(ManikEntities.MANIAC_BODY.get(), level);
+            body = clown ? new ClownBodyEntity(ManikEntities.CLOWN_BODY.get(), level)
+                    : new ManiacBodyEntity(ManikEntities.MANIAC_BODY.get(), level);
             body.setOwnerId(player.getId());
             body.setPos(player.getX(), player.getY(), player.getZ());
             body.setYRot(player.getYRot());
@@ -50,6 +54,10 @@ public final class ManiacBodyManager {
         body.setYRot(player.getYRot());
         body.setXRot(player.getXRot());
         body.setYHeadRot(player.getYHeadRot());
+        // An invisible clown hides the model, too.
+        boolean hidden = ClownManager.isInvisible(player);
+        if (body.isInvisible() != hidden) body.setInvisible(hidden);
+        ClownManager.onPlayerTick(player);
 
         // The real player body is hidden; only the custom model is visible.
         if (player.tickCount % 10 == 0 || !player.hasEffect(MobEffects.INVISIBILITY)) {

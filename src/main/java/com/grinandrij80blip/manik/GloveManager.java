@@ -43,9 +43,9 @@ public final class GloveManager {
             }
 
             ItemStack glove = attacker.getMainHandItem();
-            if (!glove.is(ManikItems.MARK_GLOVE.get())) {
+            if (!glove.is(ManikItems.MARK_GLOVE.get()) && !glove.is(ManikItems.CLOWN_HAMMER.get())) {
                 attacker.displayClientMessage(
-                        Component.literal("Маніяк може атакувати лише ножем."), true);
+                        Component.literal("Маніяк може атакувати лише своєю зброєю."), true);
                 return true;
             }
 
@@ -66,10 +66,12 @@ public final class GloveManager {
 
             Sfx.at(target, net.minecraft.sounds.SoundEvents.PLAYER_ATTACK_CRIT, 1.0F, 0.8F);
             attacker.getCooldowns().addCooldown(glove, COOLDOWN_TICKS);
+            boolean hammer = glove.is(ManikItems.CLOWN_HAMMER.get());
             attacker.displayClientMessage(
-                    Component.literal("Ніж використано. Перезарядка: 12 секунд."), true);
+                    Component.literal((hammer ? "Кувалду" : "Ніж") + " використано. Перезарядка: 12 секунд."), true);
             target.displayClientMessage(
-                    Component.literal("Влучання ножем: -8 HP."), true);
+                    Component.literal(hammer ? "Влучання кувалдою: -8 HP." : "Влучання ножем: -8 HP."), true);
+            if (hammer) ClownManager.onHammerHit(attacker, target);
             return true;
         }
 

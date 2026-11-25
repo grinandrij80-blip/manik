@@ -26,6 +26,8 @@ public final class PowerManager {
     /** Powers start the round charged to 35%. */
     private static final double START_CHARGE = 0.35;
     public static final int COOLDOWN2_TICKS = 120 * 20;
+    /** Clown: gift box power cooldown. */
+    public static final int CLOWN_COOLDOWN2_TICKS = 150 * 20;
 
     private static final Map<UUID, Long> READY_AT = new HashMap<>();
     private static final Map<UUID, Long> READY_AT2 = new HashMap<>();
@@ -46,6 +48,16 @@ public final class PowerManager {
     public static void activate(ServerPlayer player, int slot) {
         if (!isManiac(player) || StaminaManager.isDisabled(player)) return;
         long now = player.level().getGameTime();
+
+        if (ManiacTypes.isClown(player)) {
+            if (slot == 0) {
+                if (left(READY_AT, player) > 0 || ClownManager.isInvisible(player)) return;
+                READY_AT.put(player.getUUID(), now + COOLDOWN_TICKS);
+                ClownManager.activate(player);
+                sync(player);
+            }
+            return;
+        }
 
         if (slot == 0) {
             if (left(READY_AT, player) > 0) return;
@@ -82,19 +94,29 @@ public final class PowerManager {
         for (ServerPlayer other : maniac.level().getServer().getPlayerList().getPlayers()) {
             if (other == maniac || !other.isAlive() || other.isSpectator()
                     || !other.getTags().contains("manik_survivor")) continue;
-            ManikNetwork.sendJumpscare(other);
+            ManikNetwork.sendJumpscare(other, 0);
             ManikNetwork.sendShake(other, 25);
             Sfx.toPlayer(other, SoundEvents.GHAST_SCREAM, 1.0F, 0.5F);
             Sfx.toPlayer(other, SoundEvents.ENDERMAN_SCREAM, 1.0F, 0.5F);
         }
     }
 
+    public static void syncNow(ServerPlayer player) {
+        sync(player);
+    }
+
     private static void sync(ServerPlayer player) {
         int active1 = 0;
-        MobEffectInstance speed = player.getEffect(MobEffects.SPEED);
-        if (speed != null && speed.getAmplifier() == 2) active1 = Math.min(speed.getDuration(), DURATION_TICKS);
+        boolean clown = ManiacTypes.isClown(player);
+        if (clown) {
+            active1 = ClownManager.isInvisible(player) ? 20 * 60 : 0;
+        } else {
+            MobEffectInstance speed = player.getEffect(MobEffects.SPEED);
+            if (speed != null && speed.getAmplifier() == 2) active1 = Math.min(speed.getDuration(), DURATION_TICKS);
+        }
         int active2 = left(ACTIVE_UNTIL2, player);
-        ManikNetwork.sendPower(player, left(READY_AT, player), active1, left(READY_AT2, player), active2, true);
+        ManikNetwork.sendPower(player, left(READY_AT, player), active1, left(READY_AT2, player), active2, true,
+                ManiacTypes.get(player));
     }
 
     public static void onPlayerTick(TickEvent.PlayerTickEvent.Post event) {
@@ -108,7 +130,7 @@ public final class PowerManager {
             READY_AT2.remove(id);
             ACTIVE_UNTIL2.remove(id);
             if (Boolean.TRUE.equals(SYNCED_ENABLED.remove(id))) {
-                ManikNetwork.sendPower(player, 0, 0, 0, 0, false);
+                ManikNetwork.sendPower(player, 0, 0, 0, 0, false, 0);
             }
             return;
         }
@@ -117,7 +139,7 @@ public final class PowerManager {
         if (!READY_AT.containsKey(id)) {
             // First tick of a round for this maniac: powers start 35% charged.
             READY_AT.put(id, now + Math.round(COOLDOWN_TICKS * (1.0 - START_CHARGE)));
-            READY_AT2.put(id, now + Math.round(COOLDOWN2_TICKS * (1.0 - START_CHARGE)));
+            READY_AT2.put(id, now + Math.round((ManiacTypes.isClown(player) ? CLOWN_COOLDOWN2_TICKS : COOLDOWN2_TICKS) * (1.0 - START_CHARGE)));
         }
         Long pending = PENDING2.get(id);
         if (pending != null && StaminaManager.isStunned(player)) {

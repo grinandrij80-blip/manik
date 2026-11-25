@@ -17,18 +17,21 @@ public final class ManikNetwork {
     private record ShakePacket(int ticks) {}
     private record CarryPacket(boolean carrying) {}
     private record CarrierPacket(int entityId) {}
-    private record JumpscarePacket() {}
+    private record JumpscarePacket(int kind) {}
     public static final int CINEMATIC_START = 0;
     public static final int CINEMATIC_FADE_IN = 1;
     public static final int CINEMATIC_WIN = 2;
     public static final int CINEMATIC_CANCEL = 3;
+    public static final int CINEMATIC_MENU = 4;
+    public static final int CINEMATIC_MENU_CLOSE = 5;
+    private record ManiacChoicePacket(int type) {}
     private record CinematicPacket(int type, int value) {}
 
     private record PowerRequestPacket(int slot) {}
-    private record PowerSyncPacket(int cooldown1, int active1, int cooldown2, int active2, boolean enabled) {}
+    private record PowerSyncPacket(int cooldown1, int active1, int cooldown2, int active2, boolean enabled, int type) {}
 
     private static final SimpleChannel CHANNEL =
-            ChannelBuilder.named("manik:main").networkProtocolVersion(11).simpleChannel();
+            ChannelBuilder.named("manik:main").networkProtocolVersion(12).simpleChannel();
 
     private static final StreamCodec<RegistryFriendlyByteBuf, UseInputPacket> USE_INPUT_CODEC =
             StreamCodec.of(
@@ -64,7 +67,14 @@ public final class ManikNetwork {
                     buffer -> new PowerRequestPacket(buffer.readVarInt()));
 
     private static final StreamCodec<RegistryFriendlyByteBuf, JumpscarePacket> JUMPSCARE_CODEC =
-            StreamCodec.of((buffer, packet) -> {}, buffer -> new JumpscarePacket());
+            StreamCodec.of(
+                    (buffer, packet) -> buffer.writeVarInt(packet.kind()),
+                    buffer -> new JumpscarePacket(buffer.readVarInt()));
+
+    private static final StreamCodec<RegistryFriendlyByteBuf, ManiacChoicePacket> CHOICE_CODEC =
+            StreamCodec.of(
+                    (buffer, packet) -> buffer.writeVarInt(packet.type()),
+                    buffer -> new ManiacChoicePacket(buffer.readVarInt()));
 
     private static final StreamCodec<RegistryFriendlyByteBuf, PowerSyncPacket> POWER_SYNC_CODEC =
             StreamCodec.of(
@@ -74,9 +84,10 @@ public final class ManikNetwork {
                         buffer.writeVarInt(packet.cooldown2());
                         buffer.writeVarInt(packet.active2());
                         buffer.writeBoolean(packet.enabled());
+                        buffer.writeVarInt(packet.type());
                     },
                     buffer -> new PowerSyncPacket(buffer.readVarInt(), buffer.readVarInt(),
-                            buffer.readVarInt(), buffer.readVarInt(), buffer.readBoolean())
+                            buffer.readVarInt(), buffer.readVarInt(), buffer.readBoolean(), buffer.readVarInt())
             );
 
     private static final StreamCodec<RegistryFriendlyByteBuf, ExitSyncPacket> EXIT_SYNC_CODEC =
@@ -112,6 +123,10 @@ public final class ManikNetwork {
                     ServerPlayer sender = context.getSender();
                     if (sender != null) GeneratorManager.setUseInputHeld(sender, packet.held());
                 })
+                .addMain(ManiacChoicePacket.class, CHOICE_CODEC, (packet, context) -> {
+                    ServerPlayer sender = context.getSender();
+                    if (sender != null) ManiacSelection.choose(sender, packet.type());
+                })
                 .addMain(PowerRequestPacket.class, POWER_REQUEST_CODEC, (packet, context) -> {
                     ServerPlayer sender = context.getSender();
                     if (sender != null) PowerManager.activate(sender, packet.slot());
@@ -129,7 +144,7 @@ public final class ManikNetwork {
                 .addMain(PowerSyncPacket.class, POWER_SYNC_CODEC,
                         (packet, context) -> PowerHud.update(
                                 packet.cooldown1(), packet.active1(),
-                                packet.cooldown2(), packet.active2(), packet.enabled()))
+                                packet.cooldown2(), packet.active2(), packet.enabled(), packet.type()))
                 .addMain(CarryPacket.class, CARRY_CODEC,
                         (packet, context) -> CarryState.set(packet.carrying()))
                 .addMain(CarrierPacket.class, CARRIER_CODEC,
@@ -137,7 +152,7 @@ public final class ManikNetwork {
                 .addMain(CinematicPacket.class, CINEMATIC_CODEC,
                         (packet, context) -> CinematicHud.handle(packet.type(), packet.value()))
                 .addMain(JumpscarePacket.class, JUMPSCARE_CODEC,
-                        (packet, context) -> JumpscareHud.start())
+                        (packet, context) -> JumpscareHud.start(packet.kind()))
                 .build();
     }
 
@@ -157,9 +172,13 @@ public final class ManikNetwork {
         CHANNEL.send(new PowerRequestPacket(slot), PacketDistributor.SERVER.noArg());
     }
 
+    public static void sendManiacChoice(int type) {
+        CHANNEL.send(new ManiacChoicePacket(type), PacketDistributor.SERVER.noArg());
+    }
+
     public static void sendPower(ServerPlayer player, int cooldown1, int active1,
-                                 int cooldown2, int active2, boolean enabled) {
-        CHANNEL.send(new PowerSyncPacket(cooldown1, active1, cooldown2, active2, enabled),
+                                 int cooldown2, int active2, boolean enabled, int type) {
+        CHANNEL.send(new PowerSyncPacket(cooldown1, active1, cooldown2, active2, enabled, type),
                 PacketDistributor.PLAYER.with(player));
     }
 
@@ -175,8 +194,8 @@ public final class ManikNetwork {
         CHANNEL.send(new CinematicPacket(type, value), PacketDistributor.PLAYER.with(player));
     }
 
-    public static void sendJumpscare(ServerPlayer player) {
-        CHANNEL.send(new JumpscarePacket(), PacketDistributor.PLAYER.with(player));
+    public static void sendJumpscare(ServerPlayer player, int kind) {
+        CHANNEL.send(new JumpscarePacket(kind), PacketDistributor.PLAYER.with(player));
     }
 
     public static void sendStamina(ServerPlayer player, int stamina, int exhaustionTicks,

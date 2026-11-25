@@ -18,6 +18,16 @@ public final class CinematicHud {
     }
 
     public static void handle(int type, int val) {
+        Minecraft mc = Minecraft.getInstance();
+        if (type == ManikNetwork.CINEMATIC_MENU) {
+            mc.setScreen(new ManiacSelectScreen(val));
+            return;
+        }
+        if (type == ManikNetwork.CINEMATIC_MENU_CLOSE) {
+            if (mc.screen instanceof ManiacSelectScreen) mc.setScreen(null);
+            return;
+        }
+        if (type == ManikNetwork.CINEMATIC_START && mc.screen instanceof ManiacSelectScreen) mc.setScreen(null);
         value = val;
         startNanos = System.nanoTime();
         switch (type) {

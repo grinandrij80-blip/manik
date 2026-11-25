@@ -13,7 +13,7 @@ public final class PickupGuard {
 
         ItemStack stack = event.getItem().getItem();
         boolean ownRoleItem = stack.is(ManikItems.MARK_GLOVE.get()) || stack.is(ManikBlocks.TRAP_ITEM.get())
-                || stack.is(ManikItems.TRIPWIRE.get());
+                || stack.is(ManikItems.TRIPWIRE.get()) || stack.is(ManikItems.CLOWN_HAMMER.get());
         return !ownRoleItem;
     }
 

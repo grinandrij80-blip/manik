@@ -16,7 +16,7 @@ import net.minecraft.world.level.Level;
  * every frame (see ManiacBodyRenderer), so the model moves exactly with the maniac
  * instead of trailing behind network updates.
  */
-public final class ManiacBodyEntity extends LivingEntity {
+public class ManiacBodyEntity extends LivingEntity {
     private static final EntityDataAccessor<Integer> OWNER_ID =
             SynchedEntityData.defineId(ManiacBodyEntity.class, EntityDataSerializers.INT);
 

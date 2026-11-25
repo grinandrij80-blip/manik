@@ -132,13 +132,20 @@ public final class GameCommands {
             return 0;
         }
 
-        if (CinematicManager.isStarting() || CinematicManager.isEnding()) {
+        if (CinematicManager.isStarting() || CinematicManager.isEnding() || ManiacSelection.isActive()) {
             source.sendFailure(Component.literal("Зараз іде відлік або кінцівка раунду — зачекай."));
             return 0;
         }
         MinecraftServer server = source.getServer();
         final int finalKillers = killers;
-        CinematicManager.beginStart(server, () -> runStart(server, level, chosenManiacs, finalKillers));
+        // Final maniac list is decided now so those players can pick their maniac type.
+        List<ServerPlayer> maniacs = new ArrayList<>(chosenManiacs);
+        List<ServerPlayer> pool = new ArrayList<>(server.getPlayerList().getPlayers());
+        pool.removeAll(maniacs);
+        Collections.shuffle(pool);
+        while (maniacs.size() < finalKillers && !pool.isEmpty()) maniacs.add(pool.remove(0));
+        ManiacSelection.begin(server, maniacs, () ->
+                CinematicManager.beginStart(server, () -> runStart(server, level, maniacs, finalKillers)));
         return 1;
     }
 
@@ -224,6 +231,7 @@ public final class GameCommands {
             for (int slot = 0; slot < player.getInventory().getContainerSize(); slot++) {
                 if (player.getInventory().getItem(slot).is(ManikBlocks.TRAP_ITEM.get())
                         || player.getInventory().getItem(slot).is(ManikItems.MARK_GLOVE.get())
+                        || player.getInventory().getItem(slot).is(ManikItems.CLOWN_HAMMER.get())
                         || player.getInventory().getItem(slot).is(ManikItems.TRIPWIRE.get())) {
                     player.getInventory().setItem(slot, net.minecraft.world.item.ItemStack.EMPTY);
                 }
@@ -244,6 +252,23 @@ public final class GameCommands {
                     player.sendSystemMessage(Component.literal("У інвентарі немає вільного місця для капкана! Звільни слот."));
                 }
 
+                if (ManiacTypes.isClown(player)) {
+                    int hammerSlot = -1;
+                    for (int slot = 0; slot < 36; slot++) {
+                        if (player.getInventory().getItem(slot).isEmpty()) {
+                            hammerSlot = slot;
+                            break;
+                        }
+                    }
+                    if (hammerSlot >= 0) {
+                        player.getInventory().setItem(hammerSlot,
+                                new net.minecraft.world.item.ItemStack(ManikItems.CLOWN_HAMMER.get()));
+                        player.sendSystemMessage(Component.literal(
+                                "Тобі видано циркову кувалду: влучання знімає 8 HP (4 серця). Перезарядка: 12 секунд."));
+                    } else {
+                        player.sendSystemMessage(Component.literal("Немає вільного місця для кувалди!"));
+                    }
+                } else {
                 int gloveSlot = -1;
                 for (int slot = 0; slot < 36; slot++) {
                     if (player.getInventory().getItem(slot).isEmpty()) {
@@ -275,6 +300,7 @@ public final class GameCommands {
                 } else {
                     player.sendSystemMessage(Component.literal("Немає вільного місця для розтяжки! Звільни слот."));
                 }
+                            }
             }
             player.teleportTo(level, spawn.getX() + 0.5, spawn.getY(), spawn.getZ() + 0.5,
                     Set.of(), player.getYRot(), player.getXRot(), true);
@@ -292,7 +318,7 @@ public final class GameCommands {
     }
 
     private static int stop(CommandSourceStack source) {
-        if (CinematicManager.cancelStart(source.getServer())) {
+        if (ManiacSelection.cancel(source.getServer()) || CinematicManager.cancelStart(source.getServer())) {
             source.sendSuccess(() -> Component.literal("MANIK: відлік старту скасовано."), true);
             return 1;
         }
@@ -314,6 +340,8 @@ public final class GameCommands {
     /** Ends the running round (command or escape finish): cleans the map and resets roles. */
     public static void endRound(net.minecraft.server.MinecraftServer server, String message) {
         GameConfig.setRunning(false);
+        ClownManager.clear();
+        ManiacTypes.clear();
         CinematicManager.clearEnd(server);
         GloveManager.resetRound();
         ExitManager.reset(server);

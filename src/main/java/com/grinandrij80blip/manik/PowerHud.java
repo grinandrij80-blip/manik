@@ -15,6 +15,7 @@ public final class PowerHud {
     public static KeyMapping KEY2;
 
     private static boolean enabled;
+    private static int type;
     private static final int[] cooldown = new int[2];
     private static final int[] active = new int[2];
 
@@ -32,7 +33,8 @@ public final class PowerHud {
         TickEvent.ClientTickEvent.Post.BUS.addListener(PowerHud::onClientTick);
     }
 
-    public static void update(int cooldown1, int active1, int cooldown2, int active2, boolean on) {
+    public static void update(int cooldown1, int active1, int cooldown2, int active2, boolean on, int maniacType) {
+        type = maniacType;
         cooldown[0] = Math.max(0, cooldown1);
         active[0] = Math.max(0, active1);
         cooldown[1] = Math.max(0, cooldown2);
@@ -66,10 +68,14 @@ public final class PowerHud {
         int cx0 = cx1 - 2 * radius - 8;
 
         // Second power (eye) on the left, first power (maniac face) on the right.
-        diamond(graphics, cx0, cy, radius, 1, PowerManager.COOLDOWN2_TICKS);
-        drawEye(graphics, cx0, cy, cooldown[1] <= 0 || active[1] > 0);
+        boolean clown = type == 1;
+        diamond(graphics, cx0, cy, radius, 1, clown ? PowerManager.CLOWN_COOLDOWN2_TICKS : PowerManager.COOLDOWN2_TICKS);
+        if (clown) ManiacArt.giftBox(graphics, cx0, cy + 1, 0.9F, cooldown[1] <= 0 || active[1] > 0);
+        else drawEye(graphics, cx0, cy, cooldown[1] <= 0 || active[1] > 0);
         diamond(graphics, cx1, cy, radius, 0, PowerManager.COOLDOWN_TICKS);
-        drawFace(graphics, cx1, cy, cooldown[0] <= 0 || active[0] > 0);
+        if (clown) ManiacArt.clownFace(graphics, cx1, cy, 0.62F,
+                (cooldown[0] <= 0 || active[0] > 0) ? 0.55F : 0.25F);
+        else drawFace(graphics, cx1, cy, cooldown[0] <= 0 || active[0] > 0);
     }
 
     /** Thick diamond outline: white when ready or active, filling from black to white top-down on cooldown. */

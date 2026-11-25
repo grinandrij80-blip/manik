@@ -63,6 +63,7 @@ public final class TrapManager {
             }
 
             player.getCooldowns().addCooldown(trapStack, TRAP_COOLDOWN_TICKS);
+            ClownManager.breakInvisibility(player);
             if (activeLevel != level) {
                 clearAll(activeLevel);
                 activeLevel = level;

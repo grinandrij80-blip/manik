@@ -10,9 +10,12 @@ import java.util.Random;
 
 /** Animated screaming maniac face in the middle of the screen (survivors, when the maniac uses power 1). */
 public final class JumpscareHud {
-    private static final int TOTAL_TICKS = 45;
+    private static final int BRUTE_TICKS = 29; // 35% shorter than the original 45
+    private static final int CLOWN_TICKS = 10; // 0.5 s
+    private static int TOTAL_TICKS = BRUTE_TICKS;
+    private static int kind;
     private static final Random RANDOM = new Random();
-    private static int age = TOTAL_TICKS;
+    private static int age = BRUTE_TICKS;
 
     public static void register() {
         AddGuiOverlayLayersEvent.BUS.addListener(event ->
@@ -22,7 +25,9 @@ public final class JumpscareHud {
         });
     }
 
-    public static void start() {
+    public static void start(int scareKind) {
+        kind = scareKind;
+        TOTAL_TICKS = scareKind == 1 ? CLOWN_TICKS : BRUTE_TICKS;
         age = 0;
     }
 
@@ -41,6 +46,17 @@ public final class JumpscareHud {
 
         int width = minecraft.getWindow().getGuiScaledWidth();
         int height = minecraft.getWindow().getGuiScaledHeight();
+
+        if (kind == 1) {
+            float p = age / (float) TOTAL_TICKS;
+            int flash = (int) (160 * (1.0F - p));
+            g.fill(0, 0, width, height, (flash << 24) | 0x00A00000);
+            float cu = height / 20.0F * (0.5F + 1.1F * Math.min(1.0F, p * 3.0F));
+            int jx = Math.round((RANDOM.nextFloat() - 0.5F) * cu * 0.4F);
+            int jy = Math.round((RANDOM.nextFloat() - 0.5F) * cu * 0.4F);
+            ManiacArt.clownFace(g, width / 2 + jx, height / 2 + jy, cu, 1.0F);
+            return;
+        }
 
         // Red flash at the start.
         if (age < 14) {

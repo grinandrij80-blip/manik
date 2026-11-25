@@ -50,6 +50,7 @@ public final class ManikMod {
                         output.accept(ManikItems.WRENCH.get());
                         output.accept(ManikItems.TRIPWIRE.get());
                         output.accept(ManikItems.MARK_GLOVE.get());
+                        output.accept(ManikItems.CLOWN_HAMMER.get());
                     }).build());
 
     public ManikMod(FMLJavaModLoadingContext context) {
