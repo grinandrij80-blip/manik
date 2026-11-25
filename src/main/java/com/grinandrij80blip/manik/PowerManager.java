@@ -28,6 +28,8 @@ public final class PowerManager {
     public static final int COOLDOWN2_TICKS = 120 * 20;
     /** Clown: gift box power cooldown. */
     public static final int CLOWN_COOLDOWN2_TICKS = 150 * 20;
+    /** The clown freezes this long while casting the wheel of fortune. */
+    public static final int CLOWN_CAST_TICKS = 40;
 
     private static final Map<UUID, Long> READY_AT = new HashMap<>();
     private static final Map<UUID, Long> READY_AT2 = new HashMap<>();
@@ -55,6 +57,13 @@ public final class PowerManager {
                 READY_AT.put(player.getUUID(), now + COOLDOWN_TICKS);
                 ClownManager.activate(player);
                 sync(player);
+            } else {
+                if (left(READY_AT2, player) > 0 || PENDING2.containsKey(player.getUUID())) return;
+                READY_AT2.put(player.getUUID(), now + CLOWN_COOLDOWN2_TICKS);
+                PENDING2.put(player.getUUID(), now + CLOWN_CAST_TICKS);
+                StaminaManager.freezeKiller(player, CLOWN_CAST_TICKS);
+                player.displayClientMessage(net.minecraft.network.chat.Component.literal("Коробка з сюрпризом..."), true);
+                sync(player);
             }
             return;
         }
@@ -76,6 +85,11 @@ public final class PowerManager {
     }
 
     private static void applyPower2(ServerPlayer player) {
+        if (ManiacTypes.isClown(player)) {
+            ClownManager.castWheel(player);
+            sync(player);
+            return;
+        }
         long now = player.level().getGameTime();
         {
             ACTIVE_UNTIL2.put(player.getUUID(), now + DURATION2_TICKS);

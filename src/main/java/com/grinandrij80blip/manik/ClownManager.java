@@ -52,12 +52,54 @@ public final class ClownManager {
         }
     }
 
+    // ---- wheel of fortune (power 2) -------------------------------------------------
+    /** Ticks the wheel spins before its result lands (client animation matches this). */
+    public static final int WHEEL_TICKS = 60;
+    private static final java.util.Map<UUID, int[]> WHEEL = new java.util.HashMap<>();
+    private static int serverTicks;
+
+    /** Every living survivor gets their own wheel: 50% poison (like a bad nut), 50% blindness for 10 s. */
+    public static void castWheel(ServerPlayer clown) {
+        for (ServerPlayer other : clown.level().getServer().getPlayerList().getPlayers()) {
+            if (other == clown || !other.isAlive() || other.isSpectator()
+                    || !other.getTags().contains("manik_survivor")) continue;
+            int result = other.getRandom().nextBoolean() ? 1 : 0; // 1 = poison, 0 = blindness
+            WHEEL.put(other.getUUID(), new int[]{serverTicks + WHEEL_TICKS, result});
+            ManikNetwork.sendWheel(other, result);
+        }
+    }
+
+    public static void onServerTick(net.minecraft.server.MinecraftServer server) {
+        serverTicks++;
+        if (WHEEL.isEmpty()) return;
+        var it = WHEEL.entrySet().iterator();
+        while (it.hasNext()) {
+            var entry = it.next();
+            if (serverTicks < entry.getValue()[0]) continue;
+            it.remove();
+            ServerPlayer victim = server.getPlayerList().getPlayer(entry.getKey());
+            if (victim == null || !victim.isAlive() || victim.isSpectator()
+                    || !victim.getTags().contains("manik_survivor") || !GameConfig.isRunning()) continue;
+            if (entry.getValue()[1] == 1) {
+                victim.addEffect(new net.minecraft.world.effect.MobEffectInstance(
+                        net.minecraft.world.effect.MobEffects.POISON, MacadamiaItem.POISON_TICKS, 0, false, true, true));
+                victim.displayClientMessage(Component.literal("Колесо вибрало отруту! Вона забере 4 серця."), true);
+            } else {
+                victim.addEffect(new net.minecraft.world.effect.MobEffectInstance(
+                        net.minecraft.world.effect.MobEffects.BLINDNESS, 200, 0, false, true, true));
+                victim.displayClientMessage(Component.literal("Колесо вибрало сліпоту на 10 секунд!"), true);
+            }
+            Sfx.toPlayer(victim, SoundEvents.EXPERIENCE_ORB_PICKUP, 1.0F, 0.5F);
+        }
+    }
+
     public static void remove(UUID id) {
         INVISIBLE.remove(id);
     }
 
     public static void clear() {
         INVISIBLE.clear();
+        WHEEL.clear();
     }
 
     private ClownManager() {}

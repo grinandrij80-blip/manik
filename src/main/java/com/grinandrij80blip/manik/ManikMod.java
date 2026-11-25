@@ -66,6 +66,7 @@ public final class ManikMod {
             CarryHud.register();
             CarryRender.register();
             CinematicHud.register();
+            WheelHud.register();
         }
         RegisterCommandsEvent.BUS.addListener(GameCommands::onRegisterCommands);
         BlockEvent.EntityPlaceEvent.BUS.addListener(SpawnPointManager::onBlockPlace);

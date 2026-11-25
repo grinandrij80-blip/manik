@@ -76,6 +76,7 @@ public final class CinematicManager {
     public static void onServerTick(TickEvent.ServerTickEvent.Post event) {
         MinecraftServer server = event.server();
         ManiacSelection.onServerTick(server);
+        ClownManager.onServerTick(server);
         if (startAction != null && --startLeft <= 0) {
             Runnable action = startAction;
             startAction = null;
