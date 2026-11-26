@@ -12,4 +12,6 @@ public final class ManiacBodyRenderState extends LivingEntityRenderState {
     public float crouch;
     /** True when the local player is this maniac and looks through their own eyes. */
     public boolean hiddenFromOwner;
+    /** Beekeeper: wings are out. Angel: wings are spread for flight. */
+    public boolean wings;
 }

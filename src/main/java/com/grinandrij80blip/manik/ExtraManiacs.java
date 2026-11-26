@@ -454,6 +454,14 @@ public final class ExtraManiacs {
         return u == null ? 0 : (int) Math.max(0L, u - p.level().getGameTime());
     }
 
+    /** Beekeeper: wings out during flight. Angel: wings spread while flying. */
+    public static boolean wingsOut(ServerPlayer p) {
+        int t = ManiacTypes.get(p);
+        if (t == ManiacTypes.BEEKEEPER) return flightLeft(p) > 0;
+        if (t == ManiacTypes.ANGEL) return p.getAbilities().flying;
+        return false;
+    }
+
     public static boolean isPower1Active(ServerPlayer p) {
         return ManiacTypes.get(p) == ManiacTypes.BEEKEEPER && flightLeft(p) > 0;
     }

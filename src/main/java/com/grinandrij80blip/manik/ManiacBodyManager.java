@@ -34,22 +34,21 @@ public final class ManiacBodyManager {
             return;
         }
 
-        boolean clown = ManiacTypes.isClown(player);
+        int mtype = ManiacTypes.get(player);
         ManiacBodyEntity body = BODIES.get(id);
-        if (body == null || body.isRemoved() || body.level() != level
-                || (body instanceof ClownBodyEntity) != clown) {
+        if (body == null || body.isRemoved() || body.level() != level || bodyType(body) != mtype) {
             if (body != null) body.discard();
-            body = clown ? new ClownBodyEntity(ManikEntities.CLOWN_BODY.get(), level)
-                    : new ManiacBodyEntity(ManikEntities.MANIAC_BODY.get(), level);
+            body = switch (mtype) {
+                case ManiacTypes.CLOWN -> new ClownBodyEntity(ManikEntities.CLOWN_BODY.get(), level);
+                case ManiacTypes.BEEKEEPER -> new BeekeeperBodyEntity(ManikEntities.BEEKEEPER_BODY.get(), level);
+                case ManiacTypes.ANGEL -> new AngelBodyEntity(ManikEntities.ANGEL_BODY.get(), level);
+                default -> new ManiacBodyEntity(ManikEntities.MANIAC_BODY.get(), level);
+            };
             body.setOwnerId(player.getId());
             body.setPos(player.getX(), player.getY(), player.getZ());
             body.setYRot(player.getYRot());
             body.setXRot(player.getXRot());
             body.setYHeadRot(player.getYHeadRot());
-            if (ManiacTypes.get(player) == ManiacTypes.ANGEL) {
-                var sc = body.getAttribute(net.minecraft.world.entity.ai.attributes.Attributes.SCALE);
-                if (sc != null) sc.setBaseValue(ManiacTypes.scale(player) / 1.6D);
-            }
             level.addFreshEntity(body);
             BODIES.put(id, body);
         }
@@ -58,6 +57,7 @@ public final class ManiacBodyManager {
         body.setYRot(player.getYRot());
         body.setXRot(player.getXRot());
         body.setYHeadRot(player.getYHeadRot());
+        body.setWings(ExtraManiacs.wingsOut(player));
         // An invisible clown hides the model, too.
         boolean hidden = ClownManager.isInvisible(player);
         if (body.isInvisible() != hidden) body.setInvisible(hidden);
@@ -67,6 +67,13 @@ public final class ManiacBodyManager {
         if (player.tickCount % 10 == 0 || !player.hasEffect(MobEffects.INVISIBILITY)) {
             player.addEffect(new MobEffectInstance(MobEffects.INVISIBILITY, 40, 0, false, false, false));
         }
+    }
+
+    private static int bodyType(ManiacBodyEntity body) {
+        if (body instanceof ClownBodyEntity) return ManiacTypes.CLOWN;
+        if (body instanceof BeekeeperBodyEntity) return ManiacTypes.BEEKEEPER;
+        if (body instanceof AngelBodyEntity) return ManiacTypes.ANGEL;
+        return ManiacTypes.BRUTE;
     }
 
     public static void onLogout(PlayerEvent.PlayerLoggedOutEvent event) {

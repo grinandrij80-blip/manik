@@ -20,6 +20,9 @@ public class ManiacBodyEntity extends LivingEntity {
     private static final EntityDataAccessor<Integer> OWNER_ID =
             SynchedEntityData.defineId(ManiacBodyEntity.class, EntityDataSerializers.INT);
 
+    private static final EntityDataAccessor<Boolean> WINGS =
+            SynchedEntityData.defineId(ManiacBodyEntity.class, EntityDataSerializers.BOOLEAN);
+
     // Fallback walk animation, used only while the owner is not known on the client.
     public float animPos;
     public float animPosO;
@@ -40,6 +43,7 @@ public class ManiacBodyEntity extends LivingEntity {
     protected void defineSynchedData(SynchedEntityData.Builder builder) {
         super.defineSynchedData(builder);
         builder.define(OWNER_ID, -1);
+        builder.define(WINGS, false);
     }
 
     /** Entity id of the maniac player this body belongs to, or -1. */
@@ -49,6 +53,14 @@ public class ManiacBodyEntity extends LivingEntity {
 
     public void setOwnerId(int ownerId) {
         this.entityData.set(OWNER_ID, ownerId);
+    }
+
+    public boolean hasWings() {
+        return this.entityData.get(WINGS);
+    }
+
+    public void setWings(boolean value) {
+        if (this.entityData.get(WINGS) != value) this.entityData.set(WINGS, value);
     }
 
     /** The owning player as known on this side of the connection, or null. */
