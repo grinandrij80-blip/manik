@@ -28,7 +28,7 @@ public final class StaminaManager {
     private static final double MANIAC_WALK_SPEED = 0.112D;
     // 1.6x scale gives an Enderman-like height while also widening the model
     // and its entity dimensions; each player's own skin/model proportions remain.
-    private static final double MANIAC_SCALE = 1.6D;
+    
 
     private static void setScale(ServerPlayer player, double value) {
         AttributeInstance scale = player.getAttribute(Attributes.SCALE);
@@ -117,7 +117,7 @@ public final class StaminaManager {
     public static void enforceNoSprint(TickEvent.PlayerTickEvent.Pre event) {
         if (!(event.player() instanceof ServerPlayer player)) return;
         if (GameConfig.isRunning() && player.getTags().contains("manik_killer")) {
-            setScale(player, MANIAC_SCALE);
+            setScale(player, ManiacTypes.scale(player));
             setWalkSpeed(player, MANIAC_WALK_SPEED);
             player.setSprinting(false);
         }
@@ -128,10 +128,11 @@ public final class StaminaManager {
 
         UUID id = player.getUUID();
         boolean participant = GameConfig.isRunning()
-                && (player.getTags().contains("manik_killer") || player.getTags().contains("manik_survivor"));
+                && (player.getTags().contains("manik_killer") || player.getTags().contains("manik_survivor")
+                || player.getTags().contains("manik_minion"));
 
         if (!participant) {
-            setScale(player, 1.0D);
+            setScale(player, ExtraManiacs.isMinion(player) ? ExtraManiacs.MINION_SCALE : 1.0D);
             setWalkSpeed(player, SURVIVOR_WALK_SPEED);
             StaminaState removed = STATES.remove(id);
             clearStun(player, removed);
@@ -144,17 +145,17 @@ public final class StaminaManager {
         boolean killer = player.getTags().contains("manik_killer");
 
         if (killer) {
-            setScale(player, MANIAC_SCALE);
+            setScale(player, ManiacTypes.scale(player));
             setWalkSpeed(player, MANIAC_WALK_SPEED);
             player.setSprinting(false);
             state.stamina = Math.min(MAX_STAMINA, state.stamina + 0.5);
         } else if (now < state.exhaustedUntil) {
-            setScale(player, 1.0D);
+            setScale(player, ExtraManiacs.isMinion(player) ? ExtraManiacs.MINION_SCALE : 1.0D);
             setWalkSpeed(player, SURVIVOR_WALK_SPEED);
             player.setSprinting(false);
             state.stamina = Math.min(MAX_STAMINA, state.stamina + 0.5);
         } else if (player.isSprinting()) {
-            setScale(player, 1.0D);
+            setScale(player, ExtraManiacs.isMinion(player) ? ExtraManiacs.MINION_SCALE : 1.0D);
             setWalkSpeed(player, SURVIVOR_WALK_SPEED);
             state.stamina = Math.max(0.0, state.stamina - 1.0);
             if (state.stamina <= 0.0) {
@@ -169,7 +170,7 @@ public final class StaminaManager {
                         true);
             }
         } else {
-            setScale(player, 1.0D);
+            setScale(player, ExtraManiacs.isMinion(player) ? ExtraManiacs.MINION_SCALE : 1.0D);
             setWalkSpeed(player, SURVIVOR_WALK_SPEED);
             state.stamina = Math.min(MAX_STAMINA, state.stamina + 0.5);
         }
@@ -183,6 +184,9 @@ public final class StaminaManager {
                 player.setOnGround(true);
             }
         }
+
+        // The Fallen Angel's flight stamina is sent by ExtraManiacs.
+        if (killer && ManiacTypes.get(player) == ManiacTypes.ANGEL) return;
 
         int stamina = (int) Math.round(state.stamina / MAX_STAMINA * 100.0);
         int exhaustion = (int) Math.max(0L, state.exhaustedUntil - now);
@@ -220,7 +224,7 @@ public final class StaminaManager {
 
     public static void beginRound(ServerPlayer player) {
         boolean killer = player.getTags().contains("manik_killer");
-        setScale(player, killer ? MANIAC_SCALE : 1.0D);
+        setScale(player, killer ? ManiacTypes.scale(player) : 1.0D);
         setWalkSpeed(player, killer ? MANIAC_WALK_SPEED : SURVIVOR_WALK_SPEED);
         STATES.put(player.getUUID(), new StaminaState());
         boolean canSprint = !player.getTags().contains("manik_killer");
@@ -229,7 +233,7 @@ public final class StaminaManager {
 
     public static void endRound(List<ServerPlayer> players) {
         for (ServerPlayer player : players) {
-            setScale(player, 1.0D);
+            setScale(player, ExtraManiacs.isMinion(player) ? ExtraManiacs.MINION_SCALE : 1.0D);
             setWalkSpeed(player, SURVIVOR_WALK_SPEED);
             clearStun(player, STATES.remove(player.getUUID()));
             ManikNetwork.sendStamina(player, 100, 0, 0, false, true);
@@ -238,7 +242,7 @@ public final class StaminaManager {
 
     public static void onLogout(PlayerEvent.PlayerLoggedOutEvent event) {
         if (event.getEntity() instanceof ServerPlayer player) {
-            setScale(player, 1.0D);
+            setScale(player, ExtraManiacs.isMinion(player) ? ExtraManiacs.MINION_SCALE : 1.0D);
             setWalkSpeed(player, SURVIVOR_WALK_SPEED);
             clearStun(player, STATES.remove(player.getUUID()));
         }

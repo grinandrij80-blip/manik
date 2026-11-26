@@ -28,13 +28,15 @@ public final class ManikNetwork {
     private record WheelPacket(int result) {}
     private record GrabPacket(boolean grabbed) {}
     private record HandEscapePacket() {}
+    private record BlowOpenPacket() {}
+    private record BlowDonePacket() {}
     private record CinematicPacket(int type, int value) {}
 
     private record PowerRequestPacket(int slot) {}
     private record PowerSyncPacket(int cooldown1, int active1, int cooldown2, int active2, boolean enabled, int type) {}
 
     private static final SimpleChannel CHANNEL =
-            ChannelBuilder.named("manik:main").networkProtocolVersion(14).simpleChannel();
+            ChannelBuilder.named("manik:main").networkProtocolVersion(15).simpleChannel();
 
     private static final StreamCodec<RegistryFriendlyByteBuf, UseInputPacket> USE_INPUT_CODEC =
             StreamCodec.of(
@@ -133,11 +135,20 @@ public final class ManikNetwork {
                     buffer -> new CarrierPacket(buffer.readVarInt() - 1)
             );
 
+    private static final StreamCodec<RegistryFriendlyByteBuf, BlowOpenPacket> BLOW_OPEN_CODEC =
+            StreamCodec.of((buffer, packet) -> {}, buffer -> new BlowOpenPacket());
+    private static final StreamCodec<RegistryFriendlyByteBuf, BlowDonePacket> BLOW_DONE_CODEC =
+            StreamCodec.of((buffer, packet) -> {}, buffer -> new BlowDonePacket());
+
     public static void register() {
         CHANNEL.play().flow(PacketFlow.SERVERBOUND)
                 .addMain(UseInputPacket.class, USE_INPUT_CODEC, (packet, context) -> {
                     ServerPlayer sender = context.getSender();
                     if (sender != null) GeneratorManager.setUseInputHeld(sender, packet.held());
+                })
+                .addMain(BlowDonePacket.class, BLOW_DONE_CODEC, (packet, context) -> {
+                    ServerPlayer sender = context.getSender();
+                    if (sender != null) ExtraManiacs.onBlowDone(sender);
                 })
                 .addMain(HandEscapePacket.class, ESCAPE_CODEC, (packet, context) -> {
                     ServerPlayer sender = context.getSender();
@@ -171,6 +182,8 @@ public final class ManikNetwork {
                         (packet, context) -> CarryState.setCarrierId(packet.entityId()))
                 .addMain(CinematicPacket.class, CINEMATIC_CODEC,
                         (packet, context) -> CinematicHud.handle(packet.type(), packet.value()))
+                .addMain(BlowOpenPacket.class, BLOW_OPEN_CODEC,
+                        (packet, context) -> BlowScreen.open())
                 .addMain(GrabPacket.class, GRAB_CODEC,
                         (packet, context) -> HandTrapClient.setGrabbed(packet.grabbed()))
                 .addMain(WheelPacket.class, WHEEL_CODEC,
@@ -220,6 +233,14 @@ public final class ManikNetwork {
 
     public static void sendGrab(ServerPlayer player, boolean grabbed) {
         CHANNEL.send(new GrabPacket(grabbed), PacketDistributor.PLAYER.with(player));
+    }
+
+    public static void sendBlowOpen(ServerPlayer player) {
+        CHANNEL.send(new BlowOpenPacket(), PacketDistributor.PLAYER.with(player));
+    }
+
+    public static void sendBlowDone() {
+        CHANNEL.send(new BlowDonePacket(), PacketDistributor.SERVER.noArg());
     }
 
     public static void sendHandEscape() {

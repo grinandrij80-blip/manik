@@ -51,5 +51,19 @@ public final class ManikItems {
                     .durability(100)
                     .stacksTo(1)));
 
+    // Test-only maniac items (not in the creative tab, not in loot).
+    public static final RegistryObject<Item> SMOKER = ITEMS.register("smoker",
+            () -> new Item(new Item.Properties().setId(ITEMS.key("smoker")).stacksTo(1)));
+    public static final RegistryObject<Item> FEATHER_BOW = ITEMS.register("feather_bow",
+            () -> new ExtraItems.FeatherBow(new Item.Properties().setId(ITEMS.key("feather_bow")).stacksTo(1)));
+    public static final RegistryObject<Item> DAGGER = ITEMS.register("dagger",
+            () -> new Item(new Item.Properties().setId(ITEMS.key("dagger")).stacksTo(1)));
+    public static final RegistryObject<Item> CANDLE_ITEM = ITEMS.register("candle_item",
+            () -> new ExtraItems.CandleItem(new Item.Properties().setId(ITEMS.key("candle_item")).stacksTo(1)));
+    public static final RegistryObject<Item> MINI_HIVE = ITEMS.register("mini_hive",
+            () -> new ExtraItems.MiniHive(new Item.Properties().setId(ITEMS.key("mini_hive")).stacksTo(1)));
+    public static final RegistryObject<Item> HONEY_BOTTLE = ITEMS.register("honey_bottle",
+            () -> new ExtraItems.Honey(new Item.Properties().setId(ITEMS.key("honey_bottle")).stacksTo(16)));
+
     private ManikItems() {}
 }

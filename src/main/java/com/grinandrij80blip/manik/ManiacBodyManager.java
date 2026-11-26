@@ -46,6 +46,10 @@ public final class ManiacBodyManager {
             body.setYRot(player.getYRot());
             body.setXRot(player.getXRot());
             body.setYHeadRot(player.getYHeadRot());
+            if (ManiacTypes.get(player) == ManiacTypes.ANGEL) {
+                var sc = body.getAttribute(net.minecraft.world.entity.ai.attributes.Attributes.SCALE);
+                if (sc != null) sc.setBaseValue(ManiacTypes.scale(player) / 1.6D);
+            }
             level.addFreshEntity(body);
             BODIES.put(id, body);
         }
@@ -71,7 +75,7 @@ public final class ManiacBodyManager {
         }
     }
 
-    private static void removeBody(ServerPlayer player) {
+    public static void removeBody(ServerPlayer player) {
         ManiacBodyEntity body = BODIES.remove(player.getUUID());
         if (body != null) {
             body.discard();

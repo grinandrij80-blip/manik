@@ -42,6 +42,7 @@ public final class GameCommands {
 
     public static void onRegisterCommands(RegisterCommandsEvent event) {
         CommandDispatcher<CommandSourceStack> dispatcher = event.getDispatcher();
+        dispatcher.register(TestMode.command());
         dispatcher.register(Commands.literal("game")
                 .requires(MainControl::canUse)
                 .then(Commands.literal("main")

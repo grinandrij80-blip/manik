@@ -36,5 +36,11 @@
   "item.manik.lobby_spawn": "Точка лоббі",
   "block.manik.crate_spawn": "Точка появи ящика ракет",
   "item.manik.crate_spawn": "Точка появи ящика ракет",
-  "entity.manik.helicopter": "Вертоліт"
+  "entity.manik.helicopter": "Вертоліт",
+  "item.manik.smoker": "Дмухалка диму",
+  "item.manik.feather_bow": "Лук із чорного пір'я",
+  "item.manik.dagger": "Кинджал",
+  "item.manik.candle_item": "Свічка ангела",
+  "item.manik.mini_hive": "Міні-вулик",
+  "item.manik.honey_bottle": "Пляшка меду"
 }

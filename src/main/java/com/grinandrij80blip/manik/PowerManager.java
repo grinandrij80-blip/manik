@@ -51,6 +51,25 @@ public final class PowerManager {
         if (!isManiac(player) || StaminaManager.isDisabled(player)) return;
         long now = player.level().getGameTime();
 
+        int mtype = ManiacTypes.get(player);
+        if (mtype >= ManiacTypes.BEEKEEPER) {
+            if (slot == 0) {
+                if (left(READY_AT, player) > 0 || ExtraManiacs.isPower1Active(player)) return;
+                READY_AT.put(player.getUUID(), now + ExtraManiacs.total1(mtype));
+                ExtraManiacs.power1(player);
+            } else {
+                if (left(READY_AT2, player) > 0 || PENDING2.containsKey(player.getUUID())) return;
+                if (!ExtraManiacs.canCast2(player)) return;
+                READY_AT2.put(player.getUUID(), now + ExtraManiacs.total2(mtype));
+                int cast = ExtraManiacs.castTicks(mtype);
+                PENDING2.put(player.getUUID(), now + cast);
+                StaminaManager.freezeKiller(player, cast);
+                player.displayClientMessage(net.minecraft.network.chat.Component.literal("Чаклування..."), true);
+            }
+            sync(player);
+            return;
+        }
+
         if (ManiacTypes.isClown(player)) {
             if (slot == 0) {
                 if (left(READY_AT, player) > 0 || ClownManager.isInvisible(player)) return;
@@ -85,6 +104,11 @@ public final class PowerManager {
     }
 
     private static void applyPower2(ServerPlayer player) {
+        if (ManiacTypes.get(player) >= ManiacTypes.BEEKEEPER) {
+            ExtraManiacs.power2(player);
+            sync(player);
+            return;
+        }
         if (ManiacTypes.isClown(player)) {
             ClownManager.castWheel(player);
             sync(player);
@@ -122,7 +146,9 @@ public final class PowerManager {
     private static void sync(ServerPlayer player) {
         int active1 = 0;
         boolean clown = ManiacTypes.isClown(player);
-        if (clown) {
+        if (ManiacTypes.get(player) >= ManiacTypes.BEEKEEPER) {
+            active1 = ExtraManiacs.flightLeft(player);
+        } else if (clown) {
             active1 = ClownManager.isInvisible(player) ? 20 * 60 : 0;
         } else {
             MobEffectInstance speed = player.getEffect(MobEffects.SPEED);
@@ -152,8 +178,14 @@ public final class PowerManager {
         long now = player.level().getGameTime();
         if (!READY_AT.containsKey(id)) {
             // First tick of a round for this maniac: powers start 35% charged.
+            if (ManiacTypes.get(player) >= ManiacTypes.BEEKEEPER) {
+                // Test-only maniacs start with both powers ready.
+                READY_AT.put(id, now);
+                READY_AT2.put(id, now);
+            } else {
             READY_AT.put(id, now + Math.round(COOLDOWN_TICKS * (1.0 - START_CHARGE)));
             READY_AT2.put(id, now + Math.round((ManiacTypes.isClown(player) ? CLOWN_COOLDOWN2_TICKS : COOLDOWN2_TICKS) * (1.0 - START_CHARGE)));
+            }
         }
         Long pending = PENDING2.get(id);
         if (pending != null && StaminaManager.isStunned(player)) {
@@ -191,6 +223,15 @@ public final class PowerManager {
         READY_AT2.remove(id);
         ACTIVE_UNTIL2.remove(id);
         SYNCED_ENABLED.remove(id);
+    }
+
+    public static int total1(int type) {
+        return type >= ManiacTypes.BEEKEEPER ? ExtraManiacs.total1(type) : COOLDOWN_TICKS;
+    }
+
+    public static int total2(int type) {
+        if (type >= ManiacTypes.BEEKEEPER) return ExtraManiacs.total2(type);
+        return type == ManiacTypes.CLOWN ? CLOWN_COOLDOWN2_TICKS : COOLDOWN2_TICKS;
     }
 
     private PowerManager() {}

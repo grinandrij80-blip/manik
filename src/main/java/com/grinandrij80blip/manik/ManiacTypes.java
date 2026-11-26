@@ -10,6 +10,8 @@ import java.util.UUID;
 public final class ManiacTypes {
     public static final int BRUTE = 0;
     public static final int CLOWN = 1;
+    public static final int BEEKEEPER = 2;
+    public static final int ANGEL = 3;
 
     private static final Map<UUID, Integer> TYPES = new HashMap<>();
 
@@ -19,6 +21,11 @@ public final class ManiacTypes {
 
     public static boolean isClown(Player player) {
         return get(player) == CLOWN;
+    }
+
+    /** Player scale of a maniac: the Fallen Angel is low, the others are tall. */
+    public static double scale(Player player) {
+        return get(player) == ANGEL ? 0.75D : 1.6D;
     }
 
     public static void set(UUID id, int type) {

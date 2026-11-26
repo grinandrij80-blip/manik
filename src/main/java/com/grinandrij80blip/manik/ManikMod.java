@@ -87,6 +87,11 @@ public final class ManikMod {
         PlayerInteractEvent.RightClickBlock.BUS.addListener(GeneratorManager::onRightClickBlock);
         PlayerInteractEvent.RightClickBlock.BUS.addListener(TrapManager::onRightClickBlock);
         AttackEntityEvent.BUS.addListener(GloveManager::onAttackEntity);
+        PlayerInteractEvent.RightClickBlock.BUS.addListener(ExtraManiacs::onRightClickBlock);
+        BlockEvent.BreakEvent.BUS.addListener(
+                (java.util.function.Predicate<BlockEvent.BreakEvent>) ExtraManiacs::onBlockBreak);
+        TickEvent.PlayerTickEvent.Post.BUS.addListener(ExtraManiacs::onPlayerTick);
+        TickEvent.ServerTickEvent.Post.BUS.addListener(ExtraManiacs::onServerTick);
         AttackEntityEvent.BUS.addListener(CarryManager::onAttack);
         PlayerInteractEvent.RightClickBlock.BUS.addListener(CarryManager::onRightClickBlock);
         PlayerInteractEvent.RightClickItem.BUS.addListener(

@@ -9,12 +9,15 @@ public final class PickupGuard {
     /** Returns true to cancel the pickup. */
     public static boolean onPickup(EntityItemPickupEvent event) {
         Player player = event.getEntity();
+        if (GameConfig.isRunning() && player.getTags().contains("manik_minion")) return true;
         if (!GameConfig.isRunning() || !player.getTags().contains("manik_killer")) return false;
 
         ItemStack stack = event.getItem().getItem();
         boolean ownRoleItem = stack.is(ManikItems.MARK_GLOVE.get()) || stack.is(ManikBlocks.TRAP_ITEM.get())
                 || stack.is(ManikItems.TRIPWIRE.get()) || stack.is(ManikItems.CLOWN_HAMMER.get())
-                || stack.is(ManikBlocks.HAND_TRAP_ITEM.get());
+                || stack.is(ManikBlocks.HAND_TRAP_ITEM.get())
+                || stack.is(ManikItems.SMOKER.get()) || stack.is(ManikItems.MINI_HIVE.get())
+                || stack.is(ManikItems.FEATHER_BOW.get()) || stack.is(ManikItems.CANDLE_ITEM.get());
         return !ownRoleItem;
     }
 

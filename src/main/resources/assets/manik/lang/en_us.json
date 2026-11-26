@@ -36,5 +36,11 @@
   "item.manik.lobby_spawn": "Lobby point",
   "block.manik.crate_spawn": "Flare crate spawn",
   "item.manik.crate_spawn": "Flare crate spawn",
-  "entity.manik.helicopter": "Helicopter"
+  "entity.manik.helicopter": "Helicopter",
+  "item.manik.smoker": "Smoke Blower",
+  "item.manik.feather_bow": "Blackened Feather Bow",
+  "item.manik.dagger": "Dagger",
+  "item.manik.candle_item": "Angel's Candle",
+  "item.manik.mini_hive": "Mini Hive",
+  "item.manik.honey_bottle": "Honey Bottle"
 }

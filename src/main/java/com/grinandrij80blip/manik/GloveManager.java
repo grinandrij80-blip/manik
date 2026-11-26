@@ -31,6 +31,15 @@ public final class GloveManager {
             return false;
         }
 
+        if (event.getTarget().getTags().contains("manik_bee")) {
+            ExtraManiacs.onBeeAttacked(attacker, event.getTarget());
+            return true;
+        }
+        if (attacker.getTags().contains("manik_minion")) {
+            ExtraManiacs.minionAttack(attacker, event.getTarget());
+            return true;
+        }
+
         boolean killer = attacker.getTags().contains("manik_killer");
         boolean survivor = attacker.getTags().contains("manik_survivor");
 
@@ -43,7 +52,8 @@ public final class GloveManager {
             }
 
             ItemStack glove = attacker.getMainHandItem();
-            if (!glove.is(ManikItems.MARK_GLOVE.get()) && !glove.is(ManikItems.CLOWN_HAMMER.get())) {
+            if (!glove.is(ManikItems.MARK_GLOVE.get()) && !glove.is(ManikItems.CLOWN_HAMMER.get())
+                    && !glove.is(ManikItems.SMOKER.get())) {
                 attacker.displayClientMessage(
                         Component.literal("Маніяк може атакувати лише своєю зброєю."), true);
                 return true;
@@ -62,7 +72,13 @@ public final class GloveManager {
             }
 
             // Every successful glove hit deals fixed damage; there is no guaranteed kill.
-            target.hurt(attacker.damageSources().generic(), HIT_DAMAGE);
+            boolean smoker = glove.is(ManikItems.SMOKER.get());
+            target.hurt(attacker.damageSources().generic(), smoker ? ExtraManiacs.SMOKER_DIRECT : HIT_DAMAGE);
+            if (smoker) {
+                ExtraManiacs.onSmokerHit(attacker, target);
+                attacker.getCooldowns().addCooldown(glove, COOLDOWN_TICKS);
+                return true;
+            }
 
             Sfx.at(target, net.minecraft.sounds.SoundEvents.PLAYER_ATTACK_CRIT, 1.0F, 0.8F);
             attacker.getCooldowns().addCooldown(glove, COOLDOWN_TICKS);
@@ -78,7 +94,7 @@ public final class GloveManager {
         // Survivors can hit the maniac only with the crowbar or the stun gun, which
         // stun instead of damaging. Every other attack on the maniac is blocked.
         if (survivor && event.getTarget() instanceof ServerPlayer target
-                && target.getTags().contains("manik_killer")) {
+                && (target.getTags().contains("manik_killer") || target.getTags().contains("manik_minion"))) {
             ItemStack weapon = attacker.getMainHandItem();
             boolean crowbar = weapon.is(ManikItems.CROWBAR.get());
             boolean stunGun = weapon.is(ManikItems.STUN_GUN.get());

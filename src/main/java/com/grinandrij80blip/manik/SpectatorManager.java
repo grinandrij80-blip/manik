@@ -57,5 +57,30 @@ public final class SpectatorManager {
         }
     }
 
+    /** Online dead players who were forced to spectator and can be resurrected. */
+    public static java.util.List<ServerPlayer> deadPlayers(MinecraftServer server) {
+        java.util.List<ServerPlayer> list = new java.util.ArrayList<>();
+        for (UUID id : LOCKED) {
+            ServerPlayer p = server.getPlayerList().getPlayer(id);
+            if (p != null && p.isAlive() && p.getTags().contains("manik_survivor")) list.add(p);
+        }
+        return list;
+    }
+
+    public static void release(ServerPlayer player) {
+        LOCKED.remove(player.getUUID());
+        DEATH_POS.remove(player.getUUID());
+    }
+
+    /** Test stop: everybody locked as a spectator goes back to survival. */
+    public static void releaseAll(MinecraftServer server) {
+        for (UUID id : new java.util.ArrayList<>(LOCKED)) {
+            ServerPlayer p = server.getPlayerList().getPlayer(id);
+            if (p != null && p.isAlive()) p.setGameMode(GameType.SURVIVAL);
+        }
+        LOCKED.clear();
+        DEATH_POS.clear();
+    }
+
     private SpectatorManager() {}
 }

@@ -69,13 +69,63 @@ public final class PowerHud {
 
         // Second power (eye) on the left, first power (maniac face) on the right.
         boolean clown = type == 1;
-        diamond(graphics, cx0, cy, radius, 1, clown ? PowerManager.CLOWN_COOLDOWN2_TICKS : PowerManager.COOLDOWN2_TICKS);
-        if (clown) ManiacArt.giftBox(graphics, cx0, cy + 1, 0.9F, cooldown[1] <= 0 || active[1] > 0);
-        else drawEye(graphics, cx0, cy, cooldown[1] <= 0 || active[1] > 0);
-        diamond(graphics, cx1, cy, radius, 0, PowerManager.COOLDOWN_TICKS);
-        if (clown) ManiacArt.clownFace(graphics, cx1, cy, 0.62F,
-                (cooldown[0] <= 0 || active[0] > 0) ? 0.55F : 0.25F);
-        else drawFace(graphics, cx1, cy, cooldown[0] <= 0 || active[0] > 0);
+        diamond(graphics, cx0, cy, radius, 1, PowerManager.total2(type));
+        boolean r2 = cooldown[1] <= 0 || active[1] > 0;
+        boolean r1 = cooldown[0] <= 0 || active[0] > 0;
+        if (type == 2) beeFace(graphics, cx0, cy, r2);
+        else if (type == 3) skull(graphics, cx0, cy, r2);
+        else if (clown) ManiacArt.giftBox(graphics, cx0, cy + 1, 0.9F, r2);
+        else drawEye(graphics, cx0, cy, r2);
+        diamond(graphics, cx1, cy, radius, 0, PowerManager.total1(type));
+        if (type == 2) wings(graphics, cx1, cy, r1);
+        else if (type == 3) featherArrow(graphics, cx1, cy, r1);
+        else if (clown) ManiacArt.clownFace(graphics, cx1, cy, 0.62F, r1 ? 0.55F : 0.25F);
+        else drawFace(graphics, cx1, cy, r1);
+    }
+
+    private static void wings(GuiGraphics g, int cx, int cy, boolean lit) {
+        int c = lit ? 0xFFF4E04D : 0xFF6A6A3A;
+        int w = lit ? 0xFFDCEBFF : 0xFF5A6068;
+        boolean up = (System.currentTimeMillis() / 250) % 2 == 0;
+        int o = up ? -2 : 2;
+        g.fill(cx - 1, cy - 2, cx + 2, cy + 6, c);
+        g.fill(cx - 9, cy - 3 + o, cx - 2, cy + 1 + o, w);
+        g.fill(cx - 7, cy - 5 + o, cx - 3, cy - 3 + o, w);
+        g.fill(cx + 2, cy - 3 + o, cx + 9, cy + 1 + o, w);
+        g.fill(cx + 3, cy - 5 + o, cx + 7, cy - 3 + o, w);
+    }
+
+    private static void beeFace(GuiGraphics g, int cx, int cy, boolean lit) {
+        int y = lit ? 0xFFF4C430 : 0xFF6A5A20;
+        g.fill(cx - 6, cy - 5, cx + 7, cy + 7, 0xFF101010);
+        g.fill(cx - 5, cy - 4, cx + 6, cy + 6, y);
+        g.fill(cx - 5, cy - 1, cx + 6, cy + 1, 0xFF101010);
+        g.fill(cx - 4, cy - 3, cx - 1, cy - 1, 0xFFFFFFFF);
+        g.fill(cx + 2, cy - 3, cx + 5, cy - 1, 0xFFFFFFFF);
+        g.fill(cx - 3, cy - 2, cx - 2, cy - 1, 0xFF101010);
+        g.fill(cx + 3, cy - 2, cx + 4, cy - 1, 0xFF101010);
+        g.fill(cx - 6, cy - 8, cx - 5, cy - 5, 0xFF101010);
+        g.fill(cx + 6, cy - 8, cx + 7, cy - 5, 0xFF101010);
+    }
+
+    private static void featherArrow(GuiGraphics g, int cx, int cy, boolean lit) {
+        int c = lit ? 0xFFE8E8F0 : 0xFF70707A;
+        g.fill(cx - 1, cy - 8, cx + 2, cy + 8, c);
+        g.fill(cx - 3, cy - 6, cx + 4, cy - 4, c);
+        g.fill(cx - 5, cy - 4, cx + 6, cy - 2, c);
+        g.fill(cx - 4, cy + 2, cx - 1, cy + 4, 0xFF303040);
+        g.fill(cx + 2, cy + 2, cx + 5, cy + 4, 0xFF303040);
+    }
+
+    private static void skull(GuiGraphics g, int cx, int cy, boolean lit) {
+        int bg = lit ? 0xFF8A1010 : 0xFF3A1010;
+        int bone = lit ? 0xFFE8E0D8 : 0xFF6A6460;
+        g.fill(cx - 8, cy - 8, cx + 9, cy + 9, bg);
+        g.fill(cx - 5, cy - 6, cx + 6, cy + 2, bone);
+        g.fill(cx - 3, cy + 2, cx + 4, cy + 6, bone);
+        g.fill(cx - 4, cy - 3, cx - 1, cy, 0xFF101010);
+        g.fill(cx + 2, cy - 3, cx + 5, cy, 0xFF101010);
+        g.fill(cx, cy + 1, cx + 1, cy + 2, 0xFF101010);
     }
 
     /** Thick diamond outline: white when ready or active, filling from black to white top-down on cooldown. */
