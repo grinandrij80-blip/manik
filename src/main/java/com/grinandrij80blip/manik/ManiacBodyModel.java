@@ -25,33 +25,33 @@ public final class ManiacBodyModel extends EntityModel<ManiacBodyRenderState> {
         return v * 4.0F - 72.048F;
     }
 
-    private final ModelPart leg_r;
-    private final ModelPart leg_l;
+    private final ModelPart legR;
+    private final ModelPart legL;
     private final ModelPart torso;
-    private final ModelPart tail_c;
-    private final ModelPart tail_l;
-    private final ModelPart tail_r;
+    private final ModelPart tailC;
+    private final ModelPart tailL;
+    private final ModelPart tailR;
     private final ModelPart chest;
     private final ModelPart head;
-    private final ModelPart arm_r;
-    private final ModelPart fore_r;
-    private final ModelPart arm_l;
-    private final ModelPart fore_l;
+    private final ModelPart armR;
+    private final ModelPart foreR;
+    private final ModelPart armL;
+    private final ModelPart foreL;
 
     public ManiacBodyModel(ModelPart root) {
         super(root);
-        this.leg_r = root.getChild("leg_r");
-        this.leg_l = root.getChild("leg_l");
+        this.legR = root.getChild("leg_r");
+        this.legL = root.getChild("leg_l");
         this.torso = root.getChild("torso");
-        this.tail_c = this.torso.getChild("tail_c");
-        this.tail_l = this.torso.getChild("tail_l");
-        this.tail_r = this.torso.getChild("tail_r");
+        this.tailC = this.torso.getChild("tail_c");
+        this.tailL = this.torso.getChild("tail_l");
+        this.tailR = this.torso.getChild("tail_r");
         this.chest = this.torso.getChild("chest");
         this.head = this.chest.getChild("head");
-        this.arm_r = this.chest.getChild("arm_r");
-        this.fore_r = this.arm_r.getChild("fore_r");
-        this.arm_l = this.chest.getChild("arm_l");
-        this.fore_l = this.arm_l.getChild("fore_l");
+        this.armR = this.chest.getChild("arm_r");
+        this.foreR = this.armR.getChild("fore_r");
+        this.armL = this.chest.getChild("arm_l");
+        this.foreL = this.armL.getChild("fore_l");
     }
 
     public static LayerDefinition createBodyLayer() {
