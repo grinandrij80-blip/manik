@@ -15,10 +15,18 @@ import net.minecraft.world.entity.LivingEntity;
 public final class ExtraBodyRenderer
         extends LivingEntityRenderer<ManiacBodyEntity, ManiacBodyRenderState, EntityModel<ManiacBodyRenderState>> {
     private final Identifier texture;
+    private final float modelScale;
 
     public ExtraBodyRenderer(EntityRendererProvider.Context context, EntityModel<ManiacBodyRenderState> model,
                              String textureName, float shadow) {
+        this(context, model, textureName, shadow, 1.0F);
+    }
+
+    /** modelScale 0.25 draws a hi-res model (geometry built 4x larger) at normal size. */
+    public ExtraBodyRenderer(EntityRendererProvider.Context context, EntityModel<ManiacBodyRenderState> model,
+                             String textureName, float shadow, float modelScale) {
         super(context, model, shadow);
+        this.modelScale = modelScale;
         this.texture = Identifier.parse("manik:textures/entity/" + textureName + ".png");
     }
 
@@ -79,6 +87,9 @@ public final class ExtraBodyRenderer
     public void submit(ManiacBodyRenderState state, PoseStack poseStack,
                        SubmitNodeCollector collector, CameraRenderState cameraState) {
         if (state.hiddenFromOwner) return;
+        poseStack.pushPose();
+        poseStack.scale(modelScale, modelScale, modelScale);
         super.submit(state, poseStack, collector, cameraState);
+        poseStack.popPose();
     }
 }
