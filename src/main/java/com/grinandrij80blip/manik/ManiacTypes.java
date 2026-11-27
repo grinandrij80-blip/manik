@@ -25,7 +25,8 @@ public final class ManiacTypes {
 
     /** Player scale of a maniac: the Fallen Angel is low, the others are tall. */
     public static double scale(Player player) {
-        return get(player) == ANGEL ? 0.75D : 1.6D;
+        int t = get(player);
+        return t == ANGEL ? 0.75D : t == BEEKEEPER ? 1.4D : 1.6D;
     }
 
     public static void set(UUID id, int type) {

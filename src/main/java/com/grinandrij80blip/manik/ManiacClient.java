@@ -20,7 +20,7 @@ public final class ManiacClient {
     private static void onRenderers(EntityRenderersEvent.RegisterRenderers event) {
         event.registerEntityRenderer(ManikEntities.MANIAC_BODY.get(), ctx -> new ExtraBodyRenderer(ctx,
                 new ManiacBodyModel(ctx.bakeLayer(ManiacBodyModel.LAYER)), "maniac_body", 0.9F, 0.25F));
-        event.registerEntityRenderer(ManikEntities.CLOWN_BODY.get(), ClownBodyRenderer::new);
+        event.registerEntityRenderer(ManikEntities.CLOWN_BODY.get(), ctx -> new ExtraBodyRenderer(ctx, new ClownBodyModel(ctx.bakeLayer(ClownBodyModel.LAYER)), "clown_body", 0.9F, 0.25F));
         event.registerEntityRenderer(ManikEntities.BEEKEEPER_BODY.get(), ctx -> new ExtraBodyRenderer(ctx,
                 new BeekeeperBodyModel(ctx.bakeLayer(BeekeeperBodyModel.LAYER)), "beekeeper_body", 1.0F, 0.25F));
         event.registerEntityRenderer(ManikEntities.ANGEL_BODY.get(), ctx -> new ExtraBodyRenderer(ctx,

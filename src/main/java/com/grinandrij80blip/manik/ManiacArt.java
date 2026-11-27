@@ -41,6 +41,36 @@ public final class ManiacArt {
         box(g, cx, cy, u, -2.5F, mouthBottom - 2.8F, 3.5F, mouthBottom - 1.2F, 0xFF7A1010, 1);
     }
 
+    /** Headless beekeeper: fat yellow suit with black stripes, a bloody neck stump and little wings. */
+    public static void beeFace(GuiGraphics g, int cx, int cy, float u, float a) {
+        int dark = 0xFF14100C;
+        box(g, cx, cy, u, -9, -8, -4, -2, 0xFFB8D8F0, a);       // wings
+        box(g, cx, cy, u, 4, -8, 9, -2, 0xFFB8D8F0, a);
+        box(g, cx, cy, u, -7, -3, 7, 12, dark, a);
+        box(g, cx, cy, u, -6, -2, 6, 11, 0xFFEBBE24, a);        // fat belly
+        box(g, cx, cy, u, -6, 1, 6, 3, dark, a);
+        box(g, cx, cy, u, -6, 6, 6, 8, dark, a);
+        box(g, cx, cy, u, -3, -6, 3, -2, 0xFF3C3414, a);        // collar
+        box(g, cx, cy, u, -2.5F, -7, 2.5F, -5, 0xFF8A0E0E, a);  // neck stump
+        box(g, cx, cy, u, -0.5F, -2, 0.5F, 11, 0xFFA0A4AC, a);  // zipper
+        box(g, cx, cy, u, -1.5F, -7.5F, -0.5F, -6.5F, 0xFFE0D8C8, a);
+    }
+
+    /** Fallen angel: pale scarred face and burnt wings. */
+    public static void angelFace(GuiGraphics g, int cx, int cy, float u, float a) {
+        int ash = 0xFF201C1E;
+        box(g, cx, cy, u, -11, -10, -4, 6, ash, a);              // burnt wings
+        box(g, cx, cy, u, 4, -10, 11, 6, 0xFFE0DCD0, a);
+        box(g, cx, cy, u, 7, -10, 9, -6, ash, a);
+        box(g, cx, cy, u, -4, -7, 4, 5, 0xFFC4B8B0, a);          // face
+        box(g, cx, cy, u, -4, -7, 4, -5, 0xFF3A3234, a);         // scorched hair
+        box(g, cx, cy, u, -3, -3, -1, -1, 0xFF0A0608, a);        // small hollow eye
+        box(g, cx, cy, u, 0.5F, -4, 3.5F, -0.5F, 0xFFE8E2D6, a);  // big eye
+        box(g, cx, cy, u, 1.5F, -3, 2.5F, -1.5F, 0xFF100606, a);
+        box(g, cx, cy, u, -2.5F, 2, 2.5F, 2.6F, 0xFF1C0A0A, a); // stitched mouth
+        box(g, cx, cy, u, 2, 0, 2.6F, 4, 0xFFA01414, a);         // blood tear
+    }
+
     /** Gaunt clown with black eye makeup, red nose and a wide bloody grin. */
     public static void clownFace(GuiGraphics g, int cx, int cy, float u, float a) {
         int outline = 0xFF140A0A;

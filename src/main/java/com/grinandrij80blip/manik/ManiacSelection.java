@@ -34,7 +34,7 @@ public final class ManiacSelection {
 
     public static void choose(ServerPlayer player, int type) {
         if (!active || !CHOICES.containsKey(player.getUUID())) return;
-        if (type != ManiacTypes.BRUTE && type != ManiacTypes.CLOWN) return;
+        if (type != ManiacTypes.BRUTE && type != ManiacTypes.CLOWN && type != ManiacTypes.BEEKEEPER) return;
         CHOICES.put(player.getUUID(), type);
     }
 
@@ -57,7 +57,7 @@ public final class ManiacSelection {
         active = false;
         for (Map.Entry<UUID, Integer> entry : CHOICES.entrySet()) {
             int type = entry.getValue();
-            if (type < 0) type = ThreadLocalRandom.current().nextInt(2);
+            if (type < 0) type = ThreadLocalRandom.current().nextInt(3);
             ManiacTypes.set(entry.getKey(), type);
         }
         closeMenus(server);

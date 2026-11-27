@@ -91,8 +91,8 @@ public final class CinematicHud {
             float alpha = Math.min(smooth(bannerT / 5.0F), smooth((bannerLen - bannerT) / 6.0F));
             if (mode == FADE_IN) {
                 boolean maniac = value != 1;
-                String role = value == 0 ? "ТИ — НЕКРОМАНТ" : value == 2 ? "ТИ — КЛОУН" : "ТИ — ВИЖИВШИЙ";
-                int accent = value == 2 ? 0xB0388C : maniac ? 0xC21B1B : 0x2FBF8F;
+                String role = value == 0 ? "ТИ — НЕКРОМАНТ" : value == 2 ? "ТИ — КЛОУН" : value == 3 ? "ТИ — БДЖОЛЯР" : "ТИ — ВИЖИВШИЙ";
+                int accent = value == 2 ? 0xB0388C : value == 3 ? 0xE6B93A : maniac ? 0xC21B1B : 0x2FBF8F;
                 banner(g, mc, w, h, role,
                         maniac ? "Знайди і спіймай усіх" : "Запусти генератори і втечи",
                         accent, maniac ? 0x1A0505 : 0x04160F, alpha);

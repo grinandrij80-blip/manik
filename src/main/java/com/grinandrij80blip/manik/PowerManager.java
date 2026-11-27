@@ -178,13 +178,14 @@ public final class PowerManager {
         long now = player.level().getGameTime();
         if (!READY_AT.containsKey(id)) {
             // First tick of a round for this maniac: powers start 35% charged.
-            if (ManiacTypes.get(player) >= ManiacTypes.BEEKEEPER) {
-                // Test-only maniacs start with both powers ready.
+            int mt = ManiacTypes.get(player);
+            if (mt >= ManiacTypes.BEEKEEPER && TestMode.isActive()) {
+                // In /test the new maniacs start with both powers ready.
                 READY_AT.put(id, now);
                 READY_AT2.put(id, now);
             } else {
-            READY_AT.put(id, now + Math.round(COOLDOWN_TICKS * (1.0 - START_CHARGE)));
-            READY_AT2.put(id, now + Math.round((ManiacTypes.isClown(player) ? CLOWN_COOLDOWN2_TICKS : COOLDOWN2_TICKS) * (1.0 - START_CHARGE)));
+                READY_AT.put(id, now + Math.round(total1(mt) * (1.0 - START_CHARGE)));
+                READY_AT2.put(id, now + Math.round(total2(mt) * (1.0 - START_CHARGE)));
             }
         }
         Long pending = PENDING2.get(id);

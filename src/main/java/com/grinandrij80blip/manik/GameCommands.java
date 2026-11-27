@@ -248,7 +248,9 @@ public final class GameCommands {
                         || player.getInventory().getItem(slot).is(ManikItems.MARK_GLOVE.get())
                         || player.getInventory().getItem(slot).is(ManikItems.CLOWN_HAMMER.get())
                         || player.getInventory().getItem(slot).is(ManikBlocks.HAND_TRAP_ITEM.get())
-                        || player.getInventory().getItem(slot).is(ManikItems.TRIPWIRE.get())) {
+                        || player.getInventory().getItem(slot).is(ManikItems.TRIPWIRE.get())
+                        || player.getInventory().getItem(slot).is(ManikItems.SMOKER.get())
+                        || player.getInventory().getItem(slot).is(ManikItems.MINI_HIVE.get())) {
                     player.getInventory().setItem(slot, net.minecraft.world.item.ItemStack.EMPTY);
                 }
             }
@@ -299,6 +301,11 @@ public final class GameCommands {
                     } else {
                         player.sendSystemMessage(Component.literal("Немає вільного місця для руки-пастки!"));
                     }
+                } else if (ManiacTypes.get(player) == ManiacTypes.BEEKEEPER) {
+                    giveKitItem(player, ManikItems.SMOKER.get(),
+                            "Тобі видано дмухалку диму: 2 HP одразу і 6 HP отрути. Перезарядка: 12 секунд.");
+                    giveKitItem(player, ManikItems.MINI_HIVE.get(),
+                            "Тобі видано міні-вулик: ПКМ по землі. Одноразовий, спрацьовує за 3 блоки. Перезарядка: 110 секунд.");
                 } else {
                 int gloveSlot = -1;
                 for (int slot = 0; slot < 36; slot++) {
@@ -370,11 +377,23 @@ public final class GameCommands {
         CinematicManager.beginEnd(server, winner, () -> endRound(server, message));
     }
 
+    private static void giveKitItem(ServerPlayer player, net.minecraft.world.item.Item item, String message) {
+        for (int slot = 0; slot < 36; slot++) {
+            if (player.getInventory().getItem(slot).isEmpty()) {
+                player.getInventory().setItem(slot, new net.minecraft.world.item.ItemStack(item));
+                player.sendSystemMessage(Component.literal(message));
+                return;
+            }
+        }
+        player.sendSystemMessage(Component.literal("Немає вільного місця в інвентарі для предмета!"));
+    }
+
     /** Ends the running round (command or escape finish): cleans the map and resets roles. */
     public static void endRound(net.minecraft.server.MinecraftServer server, String message) {
         GameConfig.setRunning(false);
         SpectatorManager.endRound();
         ClownManager.clear();
+        ExtraManiacs.clearAll(server);
         ManiacTypes.clear();
         CinematicManager.clearEnd(server);
         GloveManager.resetRound();
